@@ -31,17 +31,16 @@ def obter_vendas_data(data_inicial, data_final):
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
-
-    current_date = start_date
     total_acumulado = 0  # Variável para armazenar o valor acumulado
-
+    current_date = start_date
+    
     while current_date <= end_date:
         data_formatada = current_date.strftime('%d/%m/%Y')
         dados = obter_vendas_data(data_formatada, data_formatada)
         
-        if dados and 'faturamentoResumo' in dados:  # Verifica se a chave 'faturamentoResumo' está presente
+        if dados and 'faturamentoResumo' in dados:
             faturamento = dados['faturamentoResumo']
-            if 'vFaturadas' in faturamento:  # Verifica se o valor das vendas de Anselmo está presente
+            if 'vFaturadas' in faturamento:
                 valor_vendas = faturamento.get('vFaturadas', 0)
                 total_acumulado += valor_vendas  # Atualiza o valor acumulado
                 vendas_data.append({
@@ -49,10 +48,6 @@ def gerar_relatorio_vendas(start_date, end_date):
                     'Vendas no dia': valor_vendas,
                     'Vendas Acumuladas': total_acumulado
                 })
-            else:
-                st.warning(f"Não foi encontrado valor de vendas para a data {data_formatada}")
-        else:
-            st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
         
         current_date += timedelta(days=1)
     
@@ -63,22 +58,7 @@ def gerar_relatorio_vendas(start_date, end_date):
     df_vendas['Vendas no dia'] = df_vendas['Vendas no dia'].apply(lambda x: f"R$ {x:,.2f}")
     df_vendas['Vendas Acumuladas'] = df_vendas['Vendas Acumuladas'].apply(lambda x: f"R$ {x:,.2f}")
     
-    # Exibe o DataFrame com formatação
-    st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
-    st.write(df_vendas.style.set_properties(subset=['Vendas no dia', 'Vendas Acumuladas'], 
-                                            **{'text-align': 'right'}))  # Alinha as colunas à direita
-
-    # Salvar o relatório usando o xlsxwriter
-    nome_arquivo = f"relatorio_vendas_{start_date.strftime('%d%m%Y')}_{end_date.strftime('%d%m%Y')}.xlsx"
-    df_vendas.to_excel(nome_arquivo, index=False, engine='xlsxwriter')
-
-    # Fornecer download
-    st.download_button(
-        label="Baixar relatório em Excel",
-        data=df_vendas.to_excel(index=False, engine='xlsxwriter'),
-        file_name=nome_arquivo,
-        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    return df_vendas
 
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
@@ -89,8 +69,14 @@ end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
 if st.button('Gerar Relatório'):
-    gerar_relatorio_vendas(start_date, end_date)
+    df_vendas = gerar_relatorio_vendas(start_date, end_date)
     
+    # Exibe o DataFrame com formatação
+    st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
+    st.write(df_vendas.style.set_properties(subset=['Vendas no dia', 'Vendas Acumuladas'], 
+                                            **{'text-align': 'right'}))  # Alinha as colunas à direita
+    
+    # Mostrar resposta da API se solicitado
     if mostrar_resposta_api:
         st.write("Resposta da API:")
         dados = obter_vendas_data(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
