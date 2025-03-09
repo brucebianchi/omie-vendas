@@ -38,15 +38,18 @@ def gerar_relatorio_vendas(start_date, end_date):
         dados = obter_vendas_data(data_formatada, data_formatada)
         
         if dados:
-            for item in dados['vendas']:
-                vendas_data.append({
-                    'Data': data_formatada,
-                    'Anselmo total da nota': item.get('vFaturadas', 0),
-                    'Meta de venda diária': 727727.27,
-                    'Vendas diárias A e F': item.get('vFaturadas', 0),
-                    'Vendas de produto': item.get('vFaturadas', 0)
-                })
-
+            if 'vendas' in dados:  # Verificar se a chave 'vendas' existe
+                for item in dados['vendas']:
+                    vendas_data.append({
+                        'Data': data_formatada,
+                        'Anselmo total da nota': item.get('vFaturadas', 0),
+                        'Meta de venda diária': 727727.27,
+                        'Vendas diárias A e F': item.get('vFaturadas', 0),
+                        'Vendas de produto': item.get('vFaturadas', 0)
+                    })
+            else:
+                st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
+        
         current_date += timedelta(days=1)
     
     df_vendas = pd.DataFrame(vendas_data)
@@ -54,6 +57,7 @@ def gerar_relatorio_vendas(start_date, end_date):
     df_vendas['Média de Vendas Diária'] = df_vendas['Vendas diárias A e F'].mean()
     
     return df_vendas
+
 
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
