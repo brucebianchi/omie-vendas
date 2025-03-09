@@ -33,6 +33,8 @@ def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
 
     current_date = start_date
+    total_acumulado = 0  # Variável para armazenar o valor acumulado
+
     while current_date <= end_date:
         data_formatada = current_date.strftime('%d/%m/%Y')
         dados = obter_vendas_data(data_formatada, data_formatada)
@@ -40,9 +42,12 @@ def gerar_relatorio_vendas(start_date, end_date):
         if dados and 'faturamentoResumo' in dados:  # Verifica se a chave 'faturamentoResumo' está presente
             faturamento = dados['faturamentoResumo']
             if 'vFaturadas' in faturamento:  # Verifica se o valor das vendas de Anselmo está presente
+                valor_vendas = faturamento.get('vFaturadas', 0)
+                total_acumulado += valor_vendas  # Atualiza o valor acumulado
                 vendas_data.append({
                     'Data': data_formatada,
-                    'Valor das Vendas (Anselmo)': faturamento.get('vFaturadas', 0)  # Acessa 'vFaturadas' dentro de 'faturamentoResumo'
+                    'Vendas no dia': valor_vendas,
+                    'Vendas Acumuladas': total_acumulado
                 })
             else:
                 st.warning(f"Não foi encontrado valor de vendas para a data {data_formatada}")
@@ -54,20 +59,23 @@ def gerar_relatorio_vendas(start_date, end_date):
     # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
     
-    # Formatando os valores para o formato R$ 000.000.000,00
-    df_vendas['Valor das Vendas (Anselmo)'] = df_vendas['Valor das Vendas (Anselmo)'].apply(lambda x: f"R$ {x:,.2f}")
+    # Aplicando a formatação R$
+    df_vendas['Vendas no dia'] = df_vendas['Vendas no dia'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Acumuladas'] = df_vendas['Vendas Acumuladas'].apply(lambda x: f"R$ {x:,.2f}")
     
-    # Exibe o DataFrame
-    st.write(df_vendas)
+    # Exibe o DataFrame com formatação
+    st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
+    st.write(df_vendas.style.set_properties(subset=['Vendas no dia', 'Vendas Acumuladas'], 
+                                            **{'text-align': 'right'}))  # Alinha as colunas à direita
 
-    # Salvar o relatório
+    # Salvar o relatório usando o xlsxwriter
     nome_arquivo = f"relatorio_vendas_{start_date.strftime('%d%m%Y')}_{end_date.strftime('%d%m%Y')}.xlsx"
-    df_vendas.to_excel(nome_arquivo, index=False, engine='openpyxl')
+    df_vendas.to_excel(nome_arquivo, index=False, engine='xlsxwriter')
 
     # Fornecer download
     st.download_button(
         label="Baixar relatório em Excel",
-        data=df_vendas.to_excel(index=False, engine='openpyxl'),
+        data=df_vendas.to_excel(index=False, engine='xlsxwriter'),
         file_name=nome_arquivo,
         mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
