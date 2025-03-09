@@ -37,30 +37,29 @@ def gerar_relatorio_vendas(start_date, end_date):
         data_formatada = current_date.strftime('%d/%m/%Y')
         dados = obter_vendas_data(data_formatada, data_formatada)
         
+        st.write(dados)  # Adicione isso para visualizar a resposta da API
+        
         if dados:
-            # Verifica se a chave 'vendas' está presente na resposta
             if 'vendas' in dados:
                 for item in dados['vendas']:
                     vendas_data.append({
                         'Data': data_formatada,
-                        'Valor das Vendas (Anselmo)': item.get('vFaturadas', 0)  # Usando 'vFaturadas' que é o valor de Anselmo
+                        'Valor das Vendas (Anselmo)': item.get('vFaturadas', 0)  # Ajustando para o valor das vendas de Anselmo
                     })
             else:
                 st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
         
         current_date += timedelta(days=1)
     
-    # Criar um DataFrame com os dados coletados
+    # Mostrar o DataFrame
     df_vendas = pd.DataFrame(vendas_data)
+    st.write(df_vendas)  # Exibe os dados na interface Streamlit
     
-    # Gerar relatório com as colunas de 'Data' e 'Valor das Vendas'
-    st.write(df_vendas)
-
-    # Salvar os dados em um arquivo Excel
+    # Salvar o relatório
     nome_arquivo = f"relatorio_vendas_{start_date.strftime('%d%m%Y')}_{end_date.strftime('%d%m%Y')}.xlsx"
     df_vendas.to_excel(nome_arquivo, index=False, engine='openpyxl')
-
-    # Fornecer um botão para download
+    
+    # Fornecer download
     st.download_button(
         label="Baixar relatório em Excel",
         data=df_vendas.to_excel(index=False, engine='openpyxl'),
