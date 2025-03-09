@@ -35,13 +35,13 @@ def gerar_relatorio_vendas(start_date, end_date):
     current_date = start_date
     
     while current_date <= end_date:
-        data_formatada = current_date.strftime('%d/%m/%Y')
+        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
         dados = obter_vendas_data(data_formatada, data_formatada)
         
-        if dados and 'faturamentoResumo' in dados:
-            faturamento = dados['faturamentoResumo']
-            if 'vFaturadas' in faturamento:
-                valor_vendas = faturamento.get('vFaturadas', 0)
+        if dados and 'pedidoVenda' in dados:  # A chave foi alterada para 'pedidoVenda'
+            pedido_venda = dados['pedidoVenda']
+            if 'vFaturadas' in pedido_venda:  # Acessa 'vFaturadas' dentro de 'pedidoVenda'
+                valor_vendas = pedido_venda.get('vFaturadas', 0)
                 total_acumulado += valor_vendas  # Atualiza o valor acumulado
                 vendas_data.append({
                     'Data': data_formatada,
@@ -65,6 +65,10 @@ st.title("Relatório de Vendas Diárias")
 start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
+# Converte as datas para o formato brasileiro (dd/mm/aaaa)
+start_date = start_date.strftime('%d/%m/%Y')
+end_date = end_date.strftime('%d/%m/%Y')
+
 # Adicionar opção para consultar a resposta da API
 mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
@@ -79,5 +83,5 @@ if st.button('Gerar Relatório'):
     # Mostrar resposta da API se solicitado
     if mostrar_resposta_api:
         st.write("Resposta da API:")
-        dados = obter_vendas_data(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        dados = obter_vendas_data(start_date, end_date)
         st.write(dados)  # Exibe os dados da API para inspeção
