@@ -65,10 +65,6 @@ st.title("Relatório de Vendas Diárias")
 start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
-# Converte as datas para o formato brasileiro (dd/mm/aaaa)
-start_date = start_date.strftime('%d/%m/%Y')
-end_date = end_date.strftime('%d/%m/%Y')
-
 # Adicionar opção para consultar a resposta da API
 mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
@@ -83,5 +79,5 @@ if st.button('Gerar Relatório'):
     # Mostrar resposta da API se solicitado
     if mostrar_resposta_api:
         st.write("Resposta da API:")
-        dados = obter_vendas_data(start_date, end_date)
+        dados = obter_vendas_data(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
         st.write(dados)  # Exibe os dados da API para inspeção
