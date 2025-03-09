@@ -37,28 +37,33 @@ def gerar_relatorio_vendas(start_date, end_date):
         data_formatada = current_date.strftime('%d/%m/%Y')
         dados = obter_vendas_data(data_formatada, data_formatada)
         
-        st.write(dados)  # Adicione isso para visualizar a resposta da API
+        # Exibe a resposta completa para depuração
+        st.write(dados)
         
-        if dados:
-            if 'vendas' in dados:
-                for item in dados['vendas']:
-                    vendas_data.append({
-                        'Data': data_formatada,
-                        'Valor das Vendas (Anselmo)': item.get('vFaturadas', 0)  # Ajustando para o valor das vendas de Anselmo
-                    })
+        if dados and 'faturamentoResumo' in dados:  # Verifica se a chave 'faturamentoResumo' está presente
+            faturamento = dados['faturamentoResumo']
+            if 'vFaturadas' in faturamento:  # Verifica se o valor das vendas de Anselmo está presente
+                vendas_data.append({
+                    'Data': data_formatada,
+                    'Valor das Vendas (Anselmo)': faturamento.get('vFaturadas', 0)  # Acessa 'vFaturadas' dentro de 'faturamentoResumo'
+                })
             else:
-                st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
+                st.warning(f"Não foi encontrado valor de vendas para a data {data_formatada}")
+        else:
+            st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
         
         current_date += timedelta(days=1)
     
-    # Mostrar o DataFrame
+    # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
-    st.write(df_vendas)  # Exibe os dados na interface Streamlit
     
+    # Exibe o DataFrame
+    st.write(df_vendas)
+
     # Salvar o relatório
     nome_arquivo = f"relatorio_vendas_{start_date.strftime('%d%m%Y')}_{end_date.strftime('%d%m%Y')}.xlsx"
     df_vendas.to_excel(nome_arquivo, index=False, engine='openpyxl')
-    
+
     # Fornecer download
     st.download_button(
         label="Baixar relatório em Excel",
