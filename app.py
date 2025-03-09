@@ -37,9 +37,6 @@ def gerar_relatorio_vendas(start_date, end_date):
         data_formatada = current_date.strftime('%d/%m/%Y')
         dados = obter_vendas_data(data_formatada, data_formatada)
         
-        # Exibe a resposta completa para depuração
-        st.write(dados)
-        
         if dados and 'faturamentoResumo' in dados:  # Verifica se a chave 'faturamentoResumo' está presente
             faturamento = dados['faturamentoResumo']
             if 'vFaturadas' in faturamento:  # Verifica se o valor das vendas de Anselmo está presente
@@ -56,6 +53,9 @@ def gerar_relatorio_vendas(start_date, end_date):
     
     # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
+    
+    # Formatando os valores para o formato R$ 000.000.000,00
+    df_vendas['Valor das Vendas (Anselmo)'] = df_vendas['Valor das Vendas (Anselmo)'].apply(lambda x: f"R$ {x:,.2f}")
     
     # Exibe o DataFrame
     st.write(df_vendas)
@@ -77,5 +77,13 @@ st.title("Relatório de Vendas Diárias")
 start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
+# Adicionar opção para consultar a resposta da API
+mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
+
 if st.button('Gerar Relatório'):
     gerar_relatorio_vendas(start_date, end_date)
+    
+    if mostrar_resposta_api:
+        st.write("Resposta da API:")
+        dados = obter_vendas_data(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        st.write(dados)  # Exibe os dados da API para inspeção
