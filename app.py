@@ -38,26 +38,35 @@ def gerar_relatorio_vendas(start_date, end_date):
         dados = obter_vendas_data(data_formatada, data_formatada)
         
         if dados:
-            if 'vendas' in dados:  # Verificar se a chave 'vendas' existe
+            # Verifica se a chave 'vendas' está presente na resposta
+            if 'vendas' in dados:
                 for item in dados['vendas']:
                     vendas_data.append({
                         'Data': data_formatada,
-                        'Anselmo total da nota': item.get('vFaturadas', 0),
-                        'Meta de venda diária': 727727.27,
-                        'Vendas diárias A e F': item.get('vFaturadas', 0),
-                        'Vendas de produto': item.get('vFaturadas', 0)
+                        'Valor das Vendas (Anselmo)': item.get('vFaturadas', 0)  # Usando 'vFaturadas' que é o valor de Anselmo
                     })
             else:
                 st.warning(f"Nenhuma venda encontrada para a data {data_formatada}")
         
         current_date += timedelta(days=1)
     
+    # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
-    df_vendas['Total Mensal'] = df_vendas['Vendas diárias A e F'].sum()
-    df_vendas['Média de Vendas Diária'] = df_vendas['Vendas diárias A e F'].mean()
     
-    return df_vendas
+    # Gerar relatório com as colunas de 'Data' e 'Valor das Vendas'
+    st.write(df_vendas)
 
+    # Salvar os dados em um arquivo Excel
+    nome_arquivo = f"relatorio_vendas_{start_date.strftime('%d%m%Y')}_{end_date.strftime('%d%m%Y')}.xlsx"
+    df_vendas.to_excel(nome_arquivo, index=False, engine='openpyxl')
+
+    # Fornecer um botão para download
+    st.download_button(
+        label="Baixar relatório em Excel",
+        data=df_vendas.to_excel(index=False, engine='openpyxl'),
+        file_name=nome_arquivo,
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
 
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
@@ -65,13 +74,4 @@ start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
 if st.button('Gerar Relatório'):
-    df = gerar_relatorio_vendas(start_date, end_date)
-    st.write(df)
-
-    # Download do relatório
-    st.download_button(
-        label="Baixar relatório em Excel",
-        data=df.to_excel(index=False, engine='openpyxl'),
-        file_name='relatorio_vendas.xlsx',
-        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    gerar_relatorio_vendas(start_date, end_date)
