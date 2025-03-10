@@ -27,26 +27,6 @@ app_secret_anselmo = decode_base64(encoded_app_secret_anselmo)
 app_key_favinco = decode_base64(encoded_app_key_favinco)
 app_secret_favinco = decode_base64(encoded_app_secret_favinco)
 
-# Função para consultar o nome do vendedor
-def obter_nome_vendedor(vendedor_id, app_key, app_secret):
-    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
-    headers = {'Content-Type': 'application/json'}
-    body = {
-        "call": "ConsultarVendedor",
-        "param": [{"codigo": vendedor_id}],
-        "app_key": app_key,
-        "app_secret": app_secret
-    }
-    response = requests.post(url, json=body, headers=headers)
-    
-    if response.status_code == 200:
-        dados = response.json()
-        if dados and dados.get('vendedor'):
-            return dados['vendedor'][0].get('nome', 'Desconhecido')
-    else:
-        st.error(f"Erro ao consultar nome do vendedor: {response.status_code}")
-        return "Desconhecido"
-
 # Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
 def obter_vendas_anselmo(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
@@ -219,7 +199,7 @@ def gerar_relatorio_vendas(start_date, end_date):
     
     return df_vendas
 
-# Função para gerar o relatório de vendedores com seus nomes e vendas totais
+# Função para gerar o relatório de vendedores com suas vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
     
@@ -234,12 +214,8 @@ def gerar_relatorio_vendedores(start_date, end_date):
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
         
-        # Obter o nome do vendedor
-        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
-        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
-        
         vendedores_info.append({
-            'Vendedor': nome_vendedor_anselmo if nome_vendedor_anselmo != 'Desconhecido' else nome_vendedor_favinco,
+            'Vendedor': vendedor_id,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
