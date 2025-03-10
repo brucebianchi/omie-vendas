@@ -86,6 +86,7 @@ def obter_vendedores_unicos(data_inicial, data_final):
 def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
     total_acumulado = 0  # Variável para armazenar o valor acumulado
+    vendedores_info = []  # Lista para armazenar as informações dos vendedores
     current_date = start_date
     
     while current_date <= end_date:
@@ -106,21 +107,28 @@ def gerar_relatorio_vendas(start_date, end_date):
             'Data': data_formatada,
             'Vendas Diárias - Anselmo': vendas_anselmo,
             'Vendas Diárias - Total': total_vendas,
-            'Acumulado Vendas': total_acumulado,
-            'Vendedores com Vendas': ', '.join(map(str, vendedores_unicos))  # Exibe os vendedores únicos no período
+            'Acumulado Vendas': total_acumulado
         })
+        
+        # Adicionando os vendedores com vendas no dia
+        for vendedor in vendedores_unicos:
+            vendedores_info.append({
+                'Data': data_formatada,
+                'Vendedor': vendedor
+            })
         
         current_date += timedelta(days=1)
     
-    # Criar um DataFrame com os dados coletados
+    # Criar DataFrames
     df_vendas = pd.DataFrame(vendas_data)
+    df_vendedores = pd.DataFrame(vendedores_info)
     
     # Aplicando a formatação R$
     df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
     df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
     df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
     
-    return df_vendas
+    return df_vendas, df_vendedores
 
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
@@ -133,12 +141,16 @@ end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
 if st.button('Gerar Relatório'):
-    df_vendas = gerar_relatorio_vendas(start_date, end_date)
+    df_vendas, df_vendedores = gerar_relatorio_vendas(start_date, end_date)
     
-    # Exibe o DataFrame com formatação
+    # Exibe o DataFrame de vendas com formatação
     st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
     st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
                                             **{'text-align': 'right'}))  # Alinha as colunas à direita
+    
+    # Exibe o DataFrame de vendedores com vendas
+    st.markdown("<h3 style='color:green;'>Vendedores com Vendas</h3>", unsafe_allow_html=True)
+    st.write(df_vendedores)
     
     # Mostrar resposta da API se solicitado
     if mostrar_resposta_api:
