@@ -157,6 +157,29 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
 
+# Função para consultar o nome do vendedor pelo código
+def obter_nome_vendedor(codigo_vendedor):
+    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ConsultarVendedor",
+        "param": [{"codigo": codigo_vendedor}],
+        "app_key": app_key_anselmo,  # ou app_key_favinco, conforme necessário
+        "app_secret": app_secret_anselmo  # ou app_secret_favinco, conforme necessário
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        dados_vendedor = response.json()
+        if dados_vendedor and dados_vendedor.get('nome'):
+            return dados_vendedor['nome']
+        else:
+            return "Nome não encontrado"
+    else:
+        st.error(f"Erro ao consultar vendedor: {response.status_code}")
+        return "Erro na consulta"
+
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
@@ -199,7 +222,7 @@ def gerar_relatorio_vendas(start_date, end_date):
     
     return df_vendas
 
-# Função para gerar o relatório de vendedores com suas vendas totais
+# Função para gerar o relatório de vendedores com seus nomes e vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
     
@@ -214,8 +237,11 @@ def gerar_relatorio_vendedores(start_date, end_date):
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
         
+        # Obter o nome do vendedor
+        nome_vendedor = obter_nome_vendedor(vendedor_id)
+        
         vendedores_info.append({
-            'Vendedor': vendedor_id,
+            'Vendedor': nome_vendedor,  # Substituindo o código pelo nome
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
