@@ -159,7 +159,7 @@ def gerar_relatorio_vendas(start_date, end_date):
 
     # Exibe os vendedores com vendas
     st.markdown("<h3 style='color:orange;'>Vendedores com Vendas</h3>", unsafe_allow_html=True)
-    st.write(vendedores_com_vendas)
+    st.write(list(vendedores_com_vendas))  # Exibe apenas os vendedores que realizaram vendas
     
     return df_vendas
 
