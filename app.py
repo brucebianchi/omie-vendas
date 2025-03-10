@@ -102,10 +102,12 @@ def obter_vendedores_unicos(data_inicial, data_final):
     
     if response.status_code == 200:
         pedidos = response.json()
+        st.write("Resposta da API (pedidos):", pedidos)  # Para depuração e verificação
+        
         vendedores = set()  # Usamos um set para garantir que vendedores sejam únicos
         if pedidos.get('pedidoVenda'):
             for pedido in pedidos['pedidoVenda']:
-                vendedor_id = pedido.get('vendedor_id')  # Supondo que 'vendedor_id' é o campo do vendedor
+                vendedor_id = pedido.get('informacoes_adicionais', {}).get('codVend')  # Acessa o campo 'codVend' para o vendedor
                 if vendedor_id:
                     vendedores.add(vendedor_id)
         return vendedores
