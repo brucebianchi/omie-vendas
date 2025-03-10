@@ -27,7 +27,7 @@ app_secret_anselmo = decode_base64(encoded_app_secret_anselmo)
 app_key_favinco = decode_base64(encoded_app_key_favinco)
 app_secret_favinco = decode_base64(encoded_app_secret_favinco)
 
-# Função para consultar o nome do vendedor pelo código
+# Função para consultar o nome do vendedor pelo código e empresa
 def obter_nome_vendedor(codigo_vendedor, empresa):
     url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
     headers = {'Content-Type': 'application/json'}
@@ -142,6 +142,48 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
 
+# Função para gerar o relatório diário de vendas
+def gerar_relatorio_vendas(start_date, end_date):
+    vendas_data = []
+    total_acumulado = 0  # Variável para armazenar o valor acumulado
+    current_date = start_date
+    
+    while current_date <= end_date:
+        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
+        
+        # Obter dados de vendas da Anselmo
+        dados_anselmo = obter_vendas_anselmo(data_formatada, data_formatada)
+        vendas_anselmo = dados_anselmo['pedidoVenda']['vFaturadas'] if dados_anselmo and 'pedidoVenda' in dados_anselmo else 0
+        
+        # Obter dados de vendas da Favinco
+        dados_favinco = obter_vendas_favinco(data_formatada, data_formatada)
+        vendas_favinco = dados_favinco['pedidoVenda']['vFaturadas'] if dados_favinco and 'pedidoVenda' in dados_favinco else 0
+        
+        # Somar as vendas de Anselmo e Favinco
+        total_vendas = vendas_anselmo + vendas_favinco
+        total_acumulado += total_vendas  # Atualiza o valor acumulado
+        
+        vendas_data.append({
+            'Data': data_formatada,
+            'Vendas Diárias - Anselmo': vendas_anselmo,
+            'Vendas Diárias - Favinco': vendas_favinco,
+            'Vendas Diárias - Total': total_vendas,
+            'Acumulado Vendas': total_acumulado
+        })
+        
+        current_date += timedelta(days=1)
+    
+    # Criar um DataFrame com os dados coletados
+    df_vendas = pd.DataFrame(vendas_data)
+    
+    # Aplicando a formatação R$
+    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
+    
+    return df_vendas
+
 # Função para gerar o relatório de vendedores com seus nomes e vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
@@ -158,13 +200,13 @@ def gerar_relatorio_vendedores(start_date, end_date):
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
         
         # Obter o nome do vendedor para Anselmo
-        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, "anselmo")
+        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, "anselmo") if total_vendas_anselmo > 0 else ''
         # Obter o nome do vendedor para Favinco
-        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, "favinco")
+        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, "favinco") if total_vendas_favinco > 0 else ''
         
         vendedores_info.append({
-            'Vendedor Anselmo': nome_vendedor_anselmo if total_vendas_anselmo > 0 else '',
-            'Vendedor Favinco': nome_vendedor_favinco if total_vendas_favinco > 0 else '',
+            'Vendedor Anselmo': nome_vendedor_anselmo,
+            'Vendedor Favinco': nome_vendedor_favinco,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
@@ -188,10 +230,16 @@ else:
     mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
     if st.button('Gerar Relatório'):
+        # Gerar o relatório de vendas
+        df_vendas = gerar_relatorio_vendas(start_date, end_date)
+        
+        # Exibe o DataFrame de vendas com formatação
+        st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
+        st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
+                                                **{'text-align': 'right'}))  # Alinha as colunas à direita
+        
         # Gerar o relatório de vendedores
         df_vendedores = gerar_relatorio_vendedores(start_date, end_date)
-        
-        # Exibe o DataFrame de vendedores com formatação
         st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
         st.write(df_vendedores.style.set_properties(subset=['Total de Vendas'], **{'text-align': 'right'}))  # Alinha as colunas à direita
         
