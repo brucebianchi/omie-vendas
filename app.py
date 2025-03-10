@@ -128,23 +128,41 @@ st.title("Relatório de Vendas Diárias")
 start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
-# Adicionar opção para consultar a resposta da API
-mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
+# Validação das datas
+if start_date > end_date:
+    st.error("A data de início não pode ser maior que a data de fim.")
+else:
+    # Adicionar opção para consultar a resposta da API
+    mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
-if st.button('Gerar Relatório'):
-    df_vendas = gerar_relatorio_vendas(start_date, end_date)
-    
-    # Exibe o DataFrame com formatação
-    st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
-    st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
-                                            **{'text-align': 'right'}))  # Alinha as colunas à direita
-    
-    # Mostrar resposta da API se solicitado
-    if mostrar_resposta_api:
-        st.write("Resposta da API (Anselmo):")
-        dados_anselmo = obter_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-        st.write(dados_anselmo)  # Exibe os dados da API para inspeção de Anselmo
+    if st.button('Gerar Relatório'):
+        df_vendas = gerar_relatorio_vendas(start_date, end_date)
+
+        # Exibe o DataFrame com formatação
+        st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
+        st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
+                                                **{'text-align': 'right'}))  # Alinha as colunas à direita
         
-        st.write("Resposta da API (Favinco):")
-        dados_favinco = obter_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-        st.write(dados_favinco)  # Exibe os dados da API para inspeção de Favinco
+        # Mostrar resposta da API se solicitado
+        if mostrar_resposta_api:
+            st.write("Resposta da API (Anselmo):")
+            dados_anselmo = obter_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+            st.write(dados_anselmo)  # Exibe os dados da API para inspeção de Anselmo
+            
+            st.write("Resposta da API (Favinco):")
+            dados_favinco = obter_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+            st.write(dados_favinco)  # Exibe os dados da API para inspeção de Favinco
+
+        # Adicionando a consulta para vendedores 2, 3 e 8
+        vendedores = [2, 3, 8]
+        vendas_vendedores = []
+        for vendedor_id in vendedores:
+            total_vendas_vendedor = obter_vendas_por_vendedor(str(vendedor_id), start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+            vendas_vendedores.append({
+                'Vendedor': f"Vendedor {vendedor_id}",
+                'Total de Vendas': f"R$ {total_vendas_vendedor:,.2f}"
+            })
+        
+        df_vendedores = pd.DataFrame(vendas_vendedores)
+        st.markdown("<h3 style='color:orange;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
+        st.write(df_vendedores.style.set_properties(subset=['Total de Vendas'], **{'text-align': 'right'}))  # Alinha as colunas à direita
