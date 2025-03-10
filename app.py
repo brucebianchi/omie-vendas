@@ -228,9 +228,11 @@ def gerar_relatorio_vendedores(start_date, end_date):
     
     # Obter os vendedores únicos e suas vendas totais para Anselmo
     vendedores_unicos_anselmo = obter_vendedores_unicos_e_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+    st.write("Vendedores Anselmo:", vendedores_unicos_anselmo)  # Verifica a resposta de Anselmo
     
     # Obter os vendedores únicos e suas vendas totais para Favinco
     vendedores_unicos_favinco = obter_vendedores_unicos_e_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+    st.write("Vendedores Favinco:", vendedores_unicos_favinco)  # Verifica a resposta de Favinco
     
     # Unir os dados dos vendedores e somar as vendas
     for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
@@ -250,6 +252,7 @@ def gerar_relatorio_vendedores(start_date, end_date):
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
+
 
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
