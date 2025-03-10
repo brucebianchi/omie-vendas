@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import os
 from datetime import datetime, timedelta
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
@@ -16,8 +17,8 @@ def obter_vendas_anselmo(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": '2875058458272', 
-        "app_secret": '5d3c695e3b2ef6dc1de57be4d3e7744b'
+        "app_key": os.getenv('APP_KEY_ANSELMO'),  # Carrega a chave secreta de Anselmo
+        "app_secret": os.getenv('APP_SECRET_ANSELMO')  # Carrega o segredo de Anselmo
     }
 
     response = requests.post(url, json=body, headers=headers)
@@ -41,8 +42,8 @@ def obter_vendas_favinco(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": '2875035458295',  # Favinco APP_KEY
-        "app_secret": 'a252b9a89612bab4ea603acf7e5f74eb'  # Favinco APP_SECRET
+        "app_key": os.getenv('APP_KEY_FAVINCO'),  # Carrega a chave secreta de Favinco
+        "app_secret": os.getenv('APP_SECRET_FAVINCO')  # Carrega o segredo de Favinco
     }
 
     response = requests.post(url, json=body, headers=headers)
