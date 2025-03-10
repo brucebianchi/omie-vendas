@@ -6,6 +6,13 @@ from datetime import datetime, timedelta
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
 def obter_vendas_anselmo(data_inicial, data_final):
+    # Imprimir as credenciais para verificar se estão sendo carregadas corretamente
+    app_key = os.getenv('APP_KEY_ANSELMO')
+    app_secret = os.getenv('APP_SECRET_ANSELMO')
+    
+    st.write(f"APP_KEY_ANSELMO: {app_key}")  # Imprime a chave da API
+    st.write(f"APP_SECRET_ANSELMO: {app_secret}")  # Imprime o segredo da API
+
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
     body = {
@@ -17,8 +24,8 @@ def obter_vendas_anselmo(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": os.getenv('APP_KEY_ANSELMO'),  # Carrega a chave secreta de Anselmo
-        "app_secret": os.getenv('APP_SECRET_ANSELMO')  # Carrega o segredo de Anselmo
+        "app_key": app_key,
+        "app_secret": app_secret
     }
 
     response = requests.post(url, json=body, headers=headers)
@@ -31,6 +38,13 @@ def obter_vendas_anselmo(data_inicial, data_final):
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Favinco
 def obter_vendas_favinco(data_inicial, data_final):
+    # Imprimir as credenciais para verificar se estão sendo carregadas corretamente
+    app_key = os.getenv('APP_KEY_FAVINCO')
+    app_secret = os.getenv('APP_SECRET_FAVINCO')
+    
+    st.write(f"APP_KEY_FAVINCO: {app_key}")  # Imprime a chave da API
+    st.write(f"APP_SECRET_FAVINCO: {app_secret}")  # Imprime o segredo da API
+
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
     body = {
@@ -42,8 +56,8 @@ def obter_vendas_favinco(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": os.getenv('APP_KEY_FAVINCO'),  # Carrega a chave secreta de Favinco
-        "app_secret": os.getenv('APP_SECRET_FAVINCO')  # Carrega o segredo de Favinco
+        "app_key": app_key,
+        "app_secret": app_secret
     }
 
     response = requests.post(url, json=body, headers=headers)
