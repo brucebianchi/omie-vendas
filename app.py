@@ -77,6 +77,43 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
+# Função para obter as vendas por vendedor
+def obter_vendas_por_vendedor(vendedor_id, data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ListarPedidos",
+        "param": [
+            {
+                "pagina": 1,
+                "registros_por_pagina": 100,
+                "apenas_importado_api": "N",
+                "data_faturamento_de": data_inicial,
+                "data_faturamento_ate": data_final
+            }
+        ],
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        pedidos = response.json()
+        total_vendas = 0
+        if pedidos.get('pedido_venda_produto'):
+            for pedido in pedidos['pedido_venda_produto']:
+                # Verifica se o pedido não está cancelado
+                if pedido.get('infoCadastro', {}).get('cancelado') == 'N':
+                    vendedor = pedido.get('informacoes_adicionais', {}).get('codVend')
+                    if vendedor == vendedor_id:
+                        valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)
+                        total_vendas += valor_total
+        return total_vendas
+    else:
+        st.error(f"Erro ao consultar vendas do vendedor: {response.status_code}")
+        return 0
+
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
@@ -119,6 +156,27 @@ def gerar_relatorio_vendas(start_date, end_date):
     
     return df_vendas
 
+# Função para gerar o relatório de vendedores com suas vendas totais
+def gerar_relatorio_vendedores(start_date, end_date):
+    vendedores = [2, 3, 8]  # IDs dos vendedores a serem consultados
+    vendas_vendedores = []
+    
+    for vendedor_id in vendedores:
+        # Obter vendas totais do vendedor na Favinco e Anselmo
+        total_vendas_anselmo = obter_vendas_por_vendedor(vendedor_id, start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        total_vendas_favinco = obter_vendas_por_vendedor(vendedor_id, start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        
+        vendas_vendedores.append({
+            'Vendedor': f"Vendedor {vendedor_id}",
+            'Total de Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
+            'Total de Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
+            'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
+        })
+    
+    # Criar DataFrame com os dados dos vendedores
+    df_vendedores = pd.DataFrame(vendas_vendedores)
+    return df_vendedores
+
 # Streamlit app interface
 st.title("Relatório de Vendas Diárias")
 
@@ -130,16 +188,21 @@ end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 if start_date > end_date:
     st.error("A data de início não pode ser maior que a data de fim.")
 else:
-    # Adicionar opção para consultar a resposta da API
     mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
     if st.button('Gerar Relatório'):
+        # Gerar o relatório de vendas
         df_vendas = gerar_relatorio_vendas(start_date, end_date)
-
-        # Exibe o DataFrame com formatação
+        
+        # Exibe o DataFrame de vendas com formatação
         st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
         st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
                                                 **{'text-align': 'right'}))  # Alinha as colunas à direita
+        
+        # Gerar o relatório de vendedores
+        df_vendedores = gerar_relatorio_vendedores(start_date, end_date)
+        st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
+        st.write(df_vendedores.style.set_properties(subset=['Total de Vendas'], **{'text-align': 'right'}))  # Alinha as colunas à direita
         
         # Mostrar resposta da API se solicitado
         if mostrar_resposta_api:
