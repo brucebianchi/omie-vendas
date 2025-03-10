@@ -27,27 +27,54 @@ app_secret_anselmo = decode_base64(encoded_app_secret_anselmo)
 app_key_favinco = decode_base64(encoded_app_key_favinco)
 app_secret_favinco = decode_base64(encoded_app_secret_favinco)
 
-# Função para consultar os dados do vendedor (nome) usando o código
-def obter_nome_vendedor(vendedor_id, app_key, app_secret):
-    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
+# Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
+def obter_vendas_anselmo(data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
     body = {
-        "call": "ConsultarVendedor",
-        "param": [{"codigo": vendedor_id}],
-        "app_key": app_key,
-        "app_secret": app_secret
+        "call": "ObterResumoProdutos",
+        "param": [
+            {
+                "dDataInicio": data_inicial,
+                "dDataFim": data_final,
+                "lApenasResumo": True
+            }
+        ],
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
     }
 
     response = requests.post(url, json=body, headers=headers)
     
     if response.status_code == 200:
-        vendedor_data = response.json()
-        if vendedor_data and 'nome' in vendedor_data[0]:
-            return vendedor_data[0]['nome']  # Retorna o nome do vendedor
-        else:
-            return None
+        return response.json()
     else:
-        st.error(f"Erro ao consultar vendedor: {response.status_code}")
+        st.error(f"Erro na requisição: {response.status_code}")
+        return None
+
+# Função para fazer a requisição à API e coletar os dados de vendas para Favinco
+def obter_vendas_favinco(data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ObterResumoProdutos",
+        "param": [
+            {
+                "dDataInicio": data_inicial,
+                "dDataFim": data_final,
+                "lApenasResumo": True
+            }
+        ],
+        "app_key": app_key_favinco,
+        "app_secret": app_secret_favinco
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"Erro na requisição: {response.status_code}")
         return None
 
 # Função para obter os vendedores únicos e somar as vendas totais de cada um para Anselmo
@@ -172,7 +199,7 @@ def gerar_relatorio_vendas(start_date, end_date):
     
     return df_vendas
 
-# Função para gerar o relatório de vendedores com seus nomes e vendas totais
+# Função para gerar o relatório de vendedores com suas vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
     
@@ -187,17 +214,8 @@ def gerar_relatorio_vendedores(start_date, end_date):
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
         
-        # Obter o nome do vendedor usando o código
-        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
-        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
-        
-        # Caso o nome do vendedor não seja encontrado, usamos o código como fallback
-        nome_vendedor = nome_vendedor_anselmo if nome_vendedor_anselmo else nome_vendedor_favinco
-        if not nome_vendedor:
-            nome_vendedor = str(vendedor_id)  # Caso o nome não tenha sido encontrado, usa o código
-        
         vendedores_info.append({
-            'Vendedor': nome_vendedor,
+            'Vendedor': vendedor_id,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
