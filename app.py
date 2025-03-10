@@ -71,13 +71,18 @@ def obter_vendedores_unicos(data_inicial, data_final):
     if response.status_code == 200:
         pedidos = response.json()
         
-        vendedores = set()  # Usamos um set para garantir que vendedores sejam únicos
+        vendedores = {}  # Usamos um dicionário para armazenar dados de cada vendedor
+        
         if pedidos.get('pedido_venda_produto'):
             for pedido in pedidos['pedido_venda_produto']:
                 vendedor_id = pedido.get('informacoes_adicionais', {}).get('codVend')  # Acessa o campo 'codVend' para o vendedor
                 if vendedor_id:
-                    vendedores.add(vendedor_id)  # Adiciona o vendedor ao set
-        return vendedores  # Retorna o conjunto de vendedores únicos
+                    valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)  # Obtém o valor total do pedido
+                    if vendedor_id not in vendedores:
+                        vendedores[vendedor_id] = {'Anselmo': 0, 'Favinco': 0}
+                    vendedores[vendedor_id]['Anselmo'] += valor_total  # Acumula as vendas de Anselmo
+                    # Aqui você pode adicionar lógica para somar vendas de Favinco, se aplicável.
+        return vendedores  # Retorna os vendedores com as vendas associadas
     else:
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
@@ -111,10 +116,12 @@ def gerar_relatorio_vendas(start_date, end_date):
         })
         
         # Adicionando os vendedores com vendas no dia
-        for vendedor in vendedores_unicos:
+        for vendedor_id, vendas in vendedores_unicos.items():
             vendedores_info.append({
                 'Data': data_formatada,
-                'Vendedor': vendedor
+                'Vendedor': vendedor_id,
+                'Vendas Anselmo': f"R$ {vendas['Anselmo']:,.2f}",
+                'Vendas Favinco': f"R$ {vendas['Favinco']:,.2f}"  # Adiciona Favinco (se disponível)
             })
         
         current_date += timedelta(days=1)
