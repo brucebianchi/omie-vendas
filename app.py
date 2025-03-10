@@ -77,8 +77,8 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
-# Função para obter os vendedores únicos e somar as vendas totais de cada um
-def obter_vendedores_unicos_e_vendas(data_inicial, data_final):
+# Função para obter os vendedores únicos e somar as vendas totais de cada um para Anselmo
+def obter_vendedores_unicos_e_vendas_anselmo(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
     headers = {'Content-Type': 'application/json'}
     body = {
@@ -92,8 +92,48 @@ def obter_vendedores_unicos_e_vendas(data_inicial, data_final):
                 "data_faturamento_ate": data_final
             }
         ],
-        "app_key": app_key_anselmo,  # A chave codificada que estamos usando
-        "app_secret": app_secret_anselmo  # O segredo codificado
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        pedidos = response.json()
+        
+        vendedores = {}  # Usamos um dicionário para armazenar os dados dos vendedores e suas vendas
+        if pedidos.get('pedido_venda_produto'):
+            for pedido in pedidos['pedido_venda_produto']:
+                # Verifica se o pedido não está cancelado
+                if pedido.get('infoCadastro', {}).get('cancelado') == 'N':
+                    vendedor_id = pedido.get('informacoes_adicionais', {}).get('codVend')  # Acessa o campo 'codVend' para o vendedor
+                    if vendedor_id:
+                        valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)  # Obtém o valor total do pedido
+                        if vendedor_id not in vendedores:
+                            vendedores[vendedor_id] = 0
+                        vendedores[vendedor_id] += valor_total  # Acumula as vendas do vendedor
+        return vendedores  # Retorna o dicionário de vendedores e suas vendas totais
+    else:
+        st.error(f"Erro ao consultar vendedores: {response.status_code}")
+        return None
+
+# Função para obter os vendedores únicos e somar as vendas totais de cada um para Favinco
+def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ListarPedidos",
+        "param": [
+            {
+                "pagina": 1,
+                "registros_por_pagina": 100,
+                "apenas_importado_api": "N",
+                "data_faturamento_de": data_inicial,
+                "data_faturamento_ate": data_final
+            }
+        ],
+        "app_key": app_key_favinco,
+        "app_secret": app_secret_favinco
     }
 
     response = requests.post(url, json=body, headers=headers)
@@ -163,13 +203,22 @@ def gerar_relatorio_vendas(start_date, end_date):
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
     
-    # Obter os vendedores únicos e suas vendas totais
-    vendedores_unicos = obter_vendedores_unicos_e_vendas(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+    # Obter os vendedores únicos e suas vendas totais para Anselmo
+    vendedores_unicos_anselmo = obter_vendedores_unicos_e_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
     
-    for vendedor_id, total_vendas in vendedores_unicos.items():
+    # Obter os vendedores únicos e suas vendas totais para Favinco
+    vendedores_unicos_favinco = obter_vendedores_unicos_e_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+    
+    # Unir os dados dos vendedores e somar as vendas
+    for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
+        total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
+        total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
+        
         vendedores_info.append({
             'Vendedor': vendedor_id,
-            'Total de Vendas': f"R$ {total_vendas:,.2f}"
+            'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
+            'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
+            'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
         })
     
     # Criar DataFrame com os dados dos vendedores
