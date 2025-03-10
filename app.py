@@ -79,30 +79,39 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
-# Função para obter vendas por vendedor
-def obter_vendas_por_vendedor(vendedor_id, data_inicial, data_final):
+# Função para obter vendedores únicos a partir dos pedidos de venda
+def obter_vendedores_unicos(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
     headers = {'Content-Type': 'application/json'}
     body = {
-        "pagina": 1,
-        "registros_por_pagina": 100,
-        "apenas_importado_api": "N",
-        "filtrar_por_vendedor": vendedor_id,
-        "data_faturamento_de": data_inicial,
-        "data_faturamento_ate": data_final
+        "call": "ListarPedidos",
+        "param": [
+            {
+                "pagina": 1,
+                "registros_por_pagina": 100,
+                "apenas_importado_api": "N",
+                "data_faturamento_de": data_inicial,
+                "data_faturamento_ate": data_final
+            }
+        ],
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
     }
 
     response = requests.post(url, json=body, headers=headers)
-
+    
     if response.status_code == 200:
         pedidos = response.json()
-        total_vendas = 0
+        vendedores = set()  # Usamos um set para garantir que vendedores sejam únicos
         if pedidos.get('pedidoVenda'):
-            total_vendas = sum(pedido['vFaturadas'] for pedido in pedidos['pedidoVenda'])
-        return total_vendas
+            for pedido in pedidos['pedidoVenda']:
+                vendedor_id = pedido.get('vendedor_id')  # Supondo que 'vendedor_id' é o campo do vendedor
+                if vendedor_id:
+                    vendedores.add(vendedor_id)
+        return vendedores
     else:
-        st.error(f"Erro ao consultar vendas do vendedor {vendedor_id}: {response.status_code}")
-        return 0
+        st.error(f"Erro ao consultar vendedores: {response.status_code}")
+        return None
 
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
@@ -178,16 +187,7 @@ else:
             dados_favinco = obter_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
             st.write(dados_favinco)  # Exibe os dados da API para inspeção de Favinco
 
-        # Adicionando a consulta para vendedores 2, 3 e 8
-        vendedores = [2, 3, 8]
-        vendas_vendedores = []
-        for vendedor_id in vendedores:
-            total_vendas_vendedor = obter_vendas_por_vendedor(str(vendedor_id), start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-            vendas_vendedores.append({
-                'Vendedor': f"Vendedor {vendedor_id}",
-                'Total de Vendas': f"R$ {total_vendas_vendedor:,.2f}"
-            })
-        
-        df_vendedores = pd.DataFrame(vendas_vendedores)
-        st.markdown("<h3 style='color:orange;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
-        st.write(df_vendedores.style.set_properties(subset=['Total de Vendas'], **{'text-align': 'right'}))  # Alinha as colunas à direita
+        # Adicionando a consulta para vendedores com vendas
+        vendedores_com_venda = obter_vendedores_unicos(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        st.markdown("<h3 style='color:orange;'>Vendedores com Vendas</h3>", unsafe_allow_html=True)
+        st.write(vendedores_com_venda)
