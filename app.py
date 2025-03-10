@@ -77,31 +77,6 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
-# Função para consultar o nome do vendedor pelo código
-def obter_nome_vendedor(codigo_vendedor):
-    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
-    headers = {'Content-Type': 'application/json'}
-    body = {
-        "call": "ConsultarVendedor",
-        "param": [
-            {"codigo": codigo_vendedor}
-        ],
-        "app_key": app_key_anselmo,
-        "app_secret": app_secret_anselmo
-    }
-
-    response = requests.post(url, json=body, headers=headers)
-    
-    if response.status_code == 200:
-        dados_vendedor = response.json()
-        if dados_vendedor and 'nome' in dados_vendedor[0]:
-            return dados_vendedor[0]['nome']
-        else:
-            return "Desconhecido"
-    else:
-        st.error(f"Erro ao consultar o nome do vendedor: {response.status_code}")
-        return "Desconhecido"
-
 # Função para obter os vendedores únicos e somar as vendas totais de cada um para Anselmo
 def obter_vendedores_unicos_e_vendas_anselmo(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
@@ -194,8 +169,8 @@ def gerar_relatorio_vendedores(start_date, end_date):
     
     # Unir os dados dos vendedores e somar as vendas
     for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
-        nome_anselmo = obter_nome_vendedor(vendedor_id)
-        nome_favinco = obter_nome_vendedor(vendedor_id)
+        nome_anselmo = vendedores_unicos_anselmo.get(vendedor_id, {}).get('nome', 'Desconhecido')
+        nome_favinco = vendedores_unicos_favinco.get(vendedor_id, {}).get('nome', 'Desconhecido')
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, {}).get('vendas', 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, {}).get('vendas', 0)
         
