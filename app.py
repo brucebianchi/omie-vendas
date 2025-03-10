@@ -27,40 +27,28 @@ app_secret_anselmo = decode_base64(encoded_app_secret_anselmo)
 app_key_favinco = decode_base64(encoded_app_key_favinco)
 app_secret_favinco = decode_base64(encoded_app_secret_favinco)
 
-# Função para consultar o nome do vendedor pelo código e empresa
-def obter_nome_vendedor(codigo_vendedor, empresa):
+# Função para consultar os dados do vendedor (nome) usando o código
+def obter_nome_vendedor(vendedor_id, app_key, app_secret):
     url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
     headers = {'Content-Type': 'application/json'}
-    
-    # Definindo as credenciais conforme a empresa
-    if empresa == "anselmo":
-        app_key = app_key_anselmo
-        app_secret = app_secret_anselmo
-    elif empresa == "favinco":
-        app_key = app_key_favinco
-        app_secret = app_secret_favinco
-    
     body = {
         "call": "ConsultarVendedor",
-        "param": [{"codigo": codigo_vendedor}],
+        "param": [{"codigo": vendedor_id}],
         "app_key": app_key,
         "app_secret": app_secret
     }
 
     response = requests.post(url, json=body, headers=headers)
-
-    # Exibir a resposta completa para depuração
-    st.write(f"Resposta da API para o vendedor {codigo_vendedor} ({empresa}): {response.text}")  # Ver a resposta completa
-
+    
     if response.status_code == 200:
-        dados_vendedor = response.json()
-        if dados_vendedor and dados_vendedor.get('nome'):
-            return dados_vendedor['nome']
+        vendedor_data = response.json()
+        if vendedor_data and 'nome' in vendedor_data[0]:
+            return vendedor_data[0]['nome']  # Retorna o nome do vendedor
         else:
-            return "Nome não encontrado"
+            return None
     else:
         st.error(f"Erro ao consultar vendedor: {response.status_code}")
-        return "Erro na consulta"
+        return None
 
 # Função para obter os vendedores únicos e somar as vendas totais de cada um para Anselmo
 def obter_vendedores_unicos_e_vendas_anselmo(data_inicial, data_final):
@@ -142,48 +130,6 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
 
-# Função para gerar o relatório diário de vendas
-def gerar_relatorio_vendas(start_date, end_date):
-    vendas_data = []
-    total_acumulado = 0  # Variável para armazenar o valor acumulado
-    current_date = start_date
-    
-    while current_date <= end_date:
-        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
-        
-        # Obter dados de vendas da Anselmo
-        dados_anselmo = obter_vendas_anselmo(data_formatada, data_formatada)
-        vendas_anselmo = dados_anselmo['pedidoVenda']['vFaturadas'] if dados_anselmo and 'pedidoVenda' in dados_anselmo else 0
-        
-        # Obter dados de vendas da Favinco
-        dados_favinco = obter_vendas_favinco(data_formatada, data_formatada)
-        vendas_favinco = dados_favinco['pedidoVenda']['vFaturadas'] if dados_favinco and 'pedidoVenda' in dados_favinco else 0
-        
-        # Somar as vendas de Anselmo e Favinco
-        total_vendas = vendas_anselmo + vendas_favinco
-        total_acumulado += total_vendas  # Atualiza o valor acumulado
-        
-        vendas_data.append({
-            'Data': data_formatada,
-            'Vendas Diárias - Anselmo': vendas_anselmo,
-            'Vendas Diárias - Favinco': vendas_favinco,
-            'Vendas Diárias - Total': total_vendas,
-            'Acumulado Vendas': total_acumulado
-        })
-        
-        current_date += timedelta(days=1)
-    
-    # Criar um DataFrame com os dados coletados
-    df_vendas = pd.DataFrame(vendas_data)
-    
-    # Aplicando a formatação R$
-    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
-    
-    return df_vendas
-
 # Função para gerar o relatório de vendedores com seus nomes e vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
@@ -199,14 +145,17 @@ def gerar_relatorio_vendedores(start_date, end_date):
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
         
-        # Obter o nome do vendedor para Anselmo
-        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, "anselmo") if total_vendas_anselmo > 0 else ''
-        # Obter o nome do vendedor para Favinco
-        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, "favinco") if total_vendas_favinco > 0 else ''
+        # Obter o nome do vendedor usando o código
+        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
+        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
+        
+        # Caso o nome do vendedor não seja encontrado, usamos o código como fallback
+        nome_vendedor = nome_vendedor_anselmo if nome_vendedor_anselmo else nome_vendedor_favinco
+        if not nome_vendedor:
+            nome_vendedor = str(vendedor_id)  # Caso o nome não tenha sido encontrado, usa o código
         
         vendedores_info.append({
-            'Vendedor Anselmo': nome_vendedor_anselmo,
-            'Vendedor Favinco': nome_vendedor_favinco,
+            'Vendedor': nome_vendedor,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
