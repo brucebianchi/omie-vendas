@@ -14,8 +14,8 @@ def encode_base64(original_str):
     return base64.b64encode(original_str.encode()).decode()
 
 # Chaves codificadas em Base64
-encoded_app_key_anselmo = "Mjg3NTA1ODU0NTgyNzI="  # Exemplo da chave codificada
-encoded_app_secret_anselmo = "NXczYzY5ZTNiMmVmNmRjMWRlNTdiZTRkM2U3NzQ0Yg=="  # Exemplo do segredo codificado
+encoded_app_key_anselmo = "Mjg3NTA1ODQ1ODI3Mg=="  # Exemplo da chave codificada
+encoded_app_secret_anselmo = "NWQzYzY5NWUzYjJlZjZkYzFkZTU3YmU0ZDNlNzc0NGI="  # Exemplo do segredo codificado
 
 # Decodificando as chaves
 app_key_anselmo = decode_base64(encoded_app_key_anselmo)
@@ -50,7 +50,7 @@ def obter_vendas_anselmo(data_inicial, data_final):
 def obter_vendas_favinco(data_inicial, data_final):
     # Chaves codificadas em Base64 para Favinco
     encoded_app_key_favinco = "Mjg3NTAzNTQ1ODI5NQ=="  # Exemplo da chave codificada
-    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGE2MDNhY2Y3ZTVmNzRlYg=="  # Exemplo do segredo codificado
+    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGVhNjAzYWNmN2U1Zjc0ZWI="  # Exemplo do segredo codificado
     
     # Decodificando as chaves
     app_key_favinco = decode_base64(encoded_app_key_favinco)
@@ -128,27 +128,23 @@ st.title("Relatório de Vendas Diárias")
 start_date = st.date_input("Data de Início", datetime(2025, 2, 1))
 end_date = st.date_input("Data de Fim", datetime(2025, 2, 28))
 
-# Validação das datas
-if start_date > end_date:
-    st.error("A data de início não pode ser maior que a data de fim.")
-else:
-    # Adicionar opção para consultar a resposta da API
-    mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
+# Adicionar opção para consultar a resposta da API
+mostrar_resposta_api = st.checkbox("Mostrar resposta da API")
 
-    if st.button('Gerar Relatório'):
-        df_vendas = gerar_relatorio_vendas(start_date, end_date)
-
-        # Exibe o DataFrame com formatação
-        st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
-        st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
-                                                **{'text-align': 'right'}))  # Alinha as colunas à direita
+if st.button('Gerar Relatório'):
+    df_vendas = gerar_relatorio_vendas(start_date, end_date)
+    
+    # Exibe o DataFrame com formatação
+    st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
+    st.write(df_vendas.style.set_properties(subset=['Vendas Diárias - Anselmo', 'Vendas Diárias - Favinco', 'Vendas Diárias - Total', 'Acumulado Vendas'], 
+                                            **{'text-align': 'right'}))  # Alinha as colunas à direita
+    
+    # Mostrar resposta da API se solicitado
+    if mostrar_resposta_api:
+        st.write("Resposta da API (Anselmo):")
+        dados_anselmo = obter_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        st.write(dados_anselmo)  # Exibe os dados da API para inspeção de Anselmo
         
-        # Mostrar resposta da API se solicitado
-        if mostrar_resposta_api:
-            st.write("Resposta da API (Anselmo):")
-            dados_anselmo = obter_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-            st.write(dados_anselmo)  # Exibe os dados da API para inspeção de Anselmo
-            
-            st.write("Resposta da API (Favinco):")
-            dados_favinco = obter_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-            st.write(dados_favinco)  # Exibe os dados da API para inspeção de Favinco
+        st.write("Resposta da API (Favinco):")
+        dados_favinco = obter_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+        st.write(dados_favinco)  # Exibe os dados da API para inspeção de Favinco
