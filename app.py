@@ -79,6 +79,31 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
+# Função para obter vendas por vendedor
+def obter_vendas_por_vendedor(vendedor_id, data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "pagina": 1,
+        "registros_por_pagina": 100,
+        "apenas_importado_api": "N",
+        "filtrar_por_vendedor": vendedor_id,
+        "data_faturamento_de": data_inicial,
+        "data_faturamento_ate": data_final
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        pedidos = response.json()
+        total_vendas = 0
+        if pedidos.get('pedidoVenda'):
+            total_vendas = sum(pedido['vFaturadas'] for pedido in pedidos['pedidoVenda'])
+        return total_vendas
+    else:
+        st.error(f"Erro ao consultar vendas do vendedor {vendedor_id}: {response.status_code}")
+        return 0
+
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
     vendas_data = []
