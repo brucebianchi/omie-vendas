@@ -1,17 +1,28 @@
+import base64
 import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
 
+# Função para decodificar a chave Base64
+def decode_base64(encoded_str):
+    decoded_bytes = base64.b64decode(encoded_str)
+    return decoded_bytes.decode('utf-8')
+
+# Função para codificar a chave em Base64 (apenas para gerar a chave codificada)
+def encode_base64(original_str):
+    return base64.b64encode(original_str.encode()).decode()
+
+# Chaves codificadas em Base64
+encoded_app_key_anselmo = "Mjg3NTA1ODU0NTgyNzI="  # Exemplo da chave codificada
+encoded_app_secret_anselmo = "NXczYzY5ZTNiMmVmNmRjMWRlNTdiZTRkM2U3NzQ0Yg=="  # Exemplo do segredo codificado
+
+# Decodificando as chaves
+app_key_anselmo = decode_base64(encoded_app_key_anselmo)
+app_secret_anselmo = decode_base64(encoded_app_secret_anselmo)
+
 # Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
 def obter_vendas_anselmo(data_inicial, data_final):
-    # Acessando as chaves secretas configuradas no Streamlit Secrets
-    app_key = st.secrets["APP_KEY_ANSELMO"]
-    app_secret = st.secrets["APP_SECRET_ANSELMO"]
-
-    st.write(f"APP_KEY_ANSELMO: {app_key}")  # Para depuração, pode remover depois
-    st.write(f"APP_SECRET_ANSELMO: {app_secret}")  # Para depuração, pode remover depois
-
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
     body = {
@@ -23,8 +34,8 @@ def obter_vendas_anselmo(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": app_key,
-        "app_secret": app_secret
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
     }
 
     response = requests.post(url, json=body, headers=headers)
@@ -37,12 +48,13 @@ def obter_vendas_anselmo(data_inicial, data_final):
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Favinco
 def obter_vendas_favinco(data_inicial, data_final):
-    # Acessando as chaves secretas configuradas no Streamlit Secrets
-    app_key = st.secrets["APP_KEY_FAVINCO"]
-    app_secret = st.secrets["APP_SECRET_FAVINCO"]
-
-    st.write(f"APP_KEY_FAVINCO: {app_key}")  # Para depuração, pode remover depois
-    st.write(f"APP_SECRET_FAVINCO: {app_secret}")  # Para depuração, pode remover depois
+    # Chaves codificadas em Base64 para Favinco
+    encoded_app_key_favinco = "Mjg3NTAzNTQ1ODI5NQ=="  # Exemplo da chave codificada
+    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGE2MDNhY2Y3ZTVmNzRlYg=="  # Exemplo do segredo codificado
+    
+    # Decodificando as chaves
+    app_key_favinco = decode_base64(encoded_app_key_favinco)
+    app_secret_favinco = decode_base64(encoded_app_secret_favinco)
 
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
@@ -55,8 +67,8 @@ def obter_vendas_favinco(data_inicial, data_final):
                 "lApenasResumo": True
             }
         ],
-        "app_key": app_key,
-        "app_secret": app_secret
+        "app_key": app_key_favinco,
+        "app_secret": app_secret_favinco
     }
 
     response = requests.post(url, json=body, headers=headers)
