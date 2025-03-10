@@ -77,8 +77,8 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
-# Função para obter as vendas por vendedor
-def obter_vendas_por_vendedor(vendedor_id, data_inicial, data_final):
+# Função para obter os vendedores únicos e somar as vendas totais de cada um
+def obter_vendedores_unicos_e_vendas(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
     headers = {'Content-Type': 'application/json'}
     body = {
@@ -92,27 +92,30 @@ def obter_vendas_por_vendedor(vendedor_id, data_inicial, data_final):
                 "data_faturamento_ate": data_final
             }
         ],
-        "app_key": app_key_anselmo,
-        "app_secret": app_secret_anselmo
+        "app_key": app_key_anselmo,  # A chave codificada que estamos usando
+        "app_secret": app_secret_anselmo  # O segredo codificado
     }
 
     response = requests.post(url, json=body, headers=headers)
     
     if response.status_code == 200:
         pedidos = response.json()
-        total_vendas = 0
+        
+        vendedores = {}  # Usamos um dicionário para armazenar os dados dos vendedores e suas vendas
         if pedidos.get('pedido_venda_produto'):
             for pedido in pedidos['pedido_venda_produto']:
                 # Verifica se o pedido não está cancelado
                 if pedido.get('infoCadastro', {}).get('cancelado') == 'N':
-                    vendedor = pedido.get('informacoes_adicionais', {}).get('codVend')
-                    if vendedor == vendedor_id:
-                        valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)
-                        total_vendas += valor_total
-        return total_vendas
+                    vendedor_id = pedido.get('informacoes_adicionais', {}).get('codVend')  # Acessa o campo 'codVend' para o vendedor
+                    if vendedor_id:
+                        valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)  # Obtém o valor total do pedido
+                        if vendedor_id not in vendedores:
+                            vendedores[vendedor_id] = 0
+                        vendedores[vendedor_id] += valor_total  # Acumula as vendas do vendedor
+        return vendedores  # Retorna o dicionário de vendedores e suas vendas totais
     else:
-        st.error(f"Erro ao consultar vendas do vendedor: {response.status_code}")
-        return 0
+        st.error(f"Erro ao consultar vendedores: {response.status_code}")
+        return None
 
 # Função para gerar o relatório diário de vendas
 def gerar_relatorio_vendas(start_date, end_date):
@@ -158,23 +161,19 @@ def gerar_relatorio_vendas(start_date, end_date):
 
 # Função para gerar o relatório de vendedores com suas vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
-    vendedores = [2, 3, 8]  # IDs dos vendedores a serem consultados
-    vendas_vendedores = []
+    vendedores_info = []
     
-    for vendedor_id in vendedores:
-        # Obter vendas totais do vendedor na Favinco e Anselmo
-        total_vendas_anselmo = obter_vendas_por_vendedor(vendedor_id, start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-        total_vendas_favinco = obter_vendas_por_vendedor(vendedor_id, start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-        
-        vendas_vendedores.append({
-            'Vendedor': f"Vendedor {vendedor_id}",
-            'Total de Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
-            'Total de Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
-            'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
+    # Obter os vendedores únicos e suas vendas totais
+    vendedores_unicos = obter_vendedores_unicos_e_vendas(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
+    
+    for vendedor_id, total_vendas in vendedores_unicos.items():
+        vendedores_info.append({
+            'Vendedor': vendedor_id,
+            'Total de Vendas': f"R$ {total_vendas:,.2f}"
         })
     
     # Criar DataFrame com os dados dos vendedores
-    df_vendedores = pd.DataFrame(vendas_vendedores)
+    df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
 
 # Streamlit app interface
