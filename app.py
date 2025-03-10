@@ -46,39 +46,6 @@ def obter_vendas_anselmo(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
-# Função para fazer a requisição à API e coletar os dados de vendas para Favinco
-def obter_vendas_favinco(data_inicial, data_final):
-    # Chaves codificadas em Base64 para Favinco
-    encoded_app_key_favinco = "Mjg3NTAzNTQ1ODI5NQ=="  # Exemplo da chave codificada
-    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGVhNjAzYWNmN2U1Zjc0ZWI="  # Exemplo do segredo codificado
-    
-    # Decodificando as chaves
-    app_key_favinco = decode_base64(encoded_app_key_favinco)
-    app_secret_favinco = decode_base64(encoded_app_secret_favinco)
-
-    url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
-    headers = {'Content-Type': 'application/json'}
-    body = {
-        "call": "ObterResumoProdutos",
-        "param": [
-            {
-                "dDataInicio": data_inicial,
-                "dDataFim": data_final,
-                "lApenasResumo": True
-            }
-        ],
-        "app_key": app_key_favinco,
-        "app_secret": app_secret_favinco
-    }
-
-    response = requests.post(url, json=body, headers=headers)
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        st.error(f"Erro na requisição: {response.status_code}")
-        return None
-
 # Função para obter vendedores únicos a partir dos pedidos de venda
 def obter_vendedores_unicos(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
@@ -191,4 +158,4 @@ else:
         # Adicionando a consulta para vendedores com vendas
         vendedores_com_venda = obter_vendedores_unicos(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
         st.markdown("<h3 style='color:orange;'>Vendedores com Vendas</h3>", unsafe_allow_html=True)
-        st.write(vendedores_com_venda)
+        st.write(vendedores_com_venda)  # Exibe apenas os códigos de vendedores únicos
