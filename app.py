@@ -14,8 +14,8 @@ def encode_base64(original_str):
     return base64.b64encode(original_str.encode()).decode()
 
 # Chaves codificadas em Base64
-encoded_app_key_anselmo = "Mjg3NTA1ODU0NTgyNzI="  # Exemplo da chave codificada
-encoded_app_secret_anselmo = "NXczYzY5ZTNiMmVmNmRjMWRlNTdiZTRkM2U3NzQ0Yg=="  # Exemplo do segredo codificado
+encoded_app_key_anselmo = "Mjg3NTA1ODQ1ODI3Mg=="  # Exemplo da chave codificada
+encoded_app_secret_anselmo = "NWQzYzY5NWUzYjJlZjZkYzFkZTU3YmU0ZDNlNzc0NGI="  # Exemplo do segredo codificado
 
 # Decodificando as chaves
 app_key_anselmo = decode_base64(encoded_app_key_anselmo)
@@ -50,7 +50,7 @@ def obter_vendas_anselmo(data_inicial, data_final):
 def obter_vendas_favinco(data_inicial, data_final):
     # Chaves codificadas em Base64 para Favinco
     encoded_app_key_favinco = "Mjg3NTAzNTQ1ODI5NQ=="  # Exemplo da chave codificada
-    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGE2MDNhY2Y3ZTVmNzRlYg=="  # Exemplo do segredo codificado
+    encoded_app_secret_favinco = "YTI1MmI5YTg5NjEyYmFiNGVhNjAzYWNmN2U1Zjc0ZWI="  # Exemplo do segredo codificado
     
     # Decodificando as chaves
     app_key_favinco = decode_base64(encoded_app_key_favinco)
