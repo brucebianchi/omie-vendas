@@ -77,6 +77,31 @@ def obter_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
+# Função para consultar o nome do vendedor pelo código
+def obter_nome_vendedor(codigo_vendedor):
+    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ConsultarVendedor",
+        "param": [
+            {"codigo": codigo_vendedor}
+        ],
+        "app_key": app_key_anselmo,
+        "app_secret": app_secret_anselmo
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        dados_vendedor = response.json()
+        if dados_vendedor and 'nome' in dados_vendedor[0]:
+            return dados_vendedor[0]['nome']
+        else:
+            return "Desconhecido"
+    else:
+        st.error(f"Erro ao consultar o nome do vendedor: {response.status_code}")
+        return "Desconhecido"
+
 # Função para obter os vendedores únicos e somar as vendas totais de cada um para Anselmo
 def obter_vendedores_unicos_e_vendas_anselmo(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
@@ -110,8 +135,8 @@ def obter_vendedores_unicos_e_vendas_anselmo(data_inicial, data_final):
                     if vendedor_id:
                         valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)  # Obtém o valor total do pedido
                         if vendedor_id not in vendedores:
-                            vendedores[vendedor_id] = 0
-                        vendedores[vendedor_id] += valor_total  # Acumula as vendas do vendedor
+                            vendedores[vendedor_id] = {'nome': "", 'vendas': 0}
+                        vendedores[vendedor_id]['vendas'] += valor_total  # Acumula as vendas do vendedor
         return vendedores  # Retorna o dicionário de vendedores e suas vendas totais
     else:
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
@@ -150,54 +175,12 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
                     if vendedor_id:
                         valor_total = pedido.get('total_pedido', {}).get('valor_total_pedido', 0)  # Obtém o valor total do pedido
                         if vendedor_id not in vendedores:
-                            vendedores[vendedor_id] = 0
-                        vendedores[vendedor_id] += valor_total  # Acumula as vendas do vendedor
+                            vendedores[vendedor_id] = {'nome': "", 'vendas': 0}
+                        vendedores[vendedor_id]['vendas'] += valor_total  # Acumula as vendas do vendedor
         return vendedores  # Retorna o dicionário de vendedores e suas vendas totais
     else:
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
-
-# Função para gerar o relatório diário de vendas
-def gerar_relatorio_vendas(start_date, end_date):
-    vendas_data = []
-    total_acumulado = 0  # Variável para armazenar o valor acumulado
-    current_date = start_date
-    
-    while current_date <= end_date:
-        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
-        
-        # Obter dados de vendas da Anselmo
-        dados_anselmo = obter_vendas_anselmo(data_formatada, data_formatada)
-        vendas_anselmo = dados_anselmo['pedidoVenda']['vFaturadas'] if dados_anselmo and 'pedidoVenda' in dados_anselmo else 0
-        
-        # Obter dados de vendas da Favinco
-        dados_favinco = obter_vendas_favinco(data_formatada, data_formatada)
-        vendas_favinco = dados_favinco['pedidoVenda']['vFaturadas'] if dados_favinco and 'pedidoVenda' in dados_favinco else 0
-        
-        # Somar as vendas de Anselmo e Favinco
-        total_vendas = vendas_anselmo + vendas_favinco
-        total_acumulado += total_vendas  # Atualiza o valor acumulado
-        
-        vendas_data.append({
-            'Data': data_formatada,
-            'Vendas Diárias - Anselmo': vendas_anselmo,
-            'Vendas Diárias - Favinco': vendas_favinco,
-            'Vendas Diárias - Total': total_vendas,
-            'Acumulado Vendas': total_acumulado
-        })
-        
-        current_date += timedelta(days=1)
-    
-    # Criar um DataFrame com os dados coletados
-    df_vendas = pd.DataFrame(vendas_data)
-    
-    # Aplicando a formatação R$
-    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
-    
-    return df_vendas
 
 # Função para gerar o relatório de vendedores com suas vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
@@ -211,11 +194,13 @@ def gerar_relatorio_vendedores(start_date, end_date):
     
     # Unir os dados dos vendedores e somar as vendas
     for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
-        total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
-        total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
+        nome_anselmo = obter_nome_vendedor(vendedor_id)
+        nome_favinco = obter_nome_vendedor(vendedor_id)
+        total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, {}).get('vendas', 0)
+        total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, {}).get('vendas', 0)
         
         vendedores_info.append({
-            'Vendedor': vendedor_id,
+            'Vendedor': nome_anselmo,  # Exibe o nome do vendedor
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
