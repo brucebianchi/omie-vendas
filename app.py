@@ -177,6 +177,48 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final):
         st.error(f"Erro ao consultar vendedores: {response.status_code}")
         return None
 
+# Função para gerar o relatório diário de vendas
+def gerar_relatorio_vendas(start_date, end_date):
+    vendas_data = []
+    total_acumulado = 0  # Variável para armazenar o valor acumulado
+    current_date = start_date
+    
+    while current_date <= end_date:
+        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
+        
+        # Obter dados de vendas da Anselmo
+        dados_anselmo = obter_vendas_anselmo(data_formatada, data_formatada)
+        vendas_anselmo = dados_anselmo['pedidoVenda']['vFaturadas'] if dados_anselmo and 'pedidoVenda' in dados_anselmo else 0
+        
+        # Obter dados de vendas da Favinco
+        dados_favinco = obter_vendas_favinco(data_formatada, data_formatada)
+        vendas_favinco = dados_favinco['pedidoVenda']['vFaturadas'] if dados_favinco and 'pedidoVenda' in dados_favinco else 0
+        
+        # Somar as vendas de Anselmo e Favinco
+        total_vendas = vendas_anselmo + vendas_favinco
+        total_acumulado += total_vendas  # Atualiza o valor acumulado
+        
+        vendas_data.append({
+            'Data': data_formatada,
+            'Vendas Diárias - Anselmo': vendas_anselmo,
+            'Vendas Diárias - Favinco': vendas_favinco,
+            'Vendas Diárias - Total': total_vendas,
+            'Acumulado Vendas': total_acumulado
+        })
+        
+        current_date += timedelta(days=1)
+    
+    # Criar um DataFrame com os dados coletados
+    df_vendas = pd.DataFrame(vendas_data)
+    
+    # Aplicando a formatação R$
+    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
+    
+    return df_vendas
+
 # Função para gerar o relatório de vendedores com seus nomes e vendas totais
 def gerar_relatorio_vendedores(start_date, end_date):
     vendedores_info = []
