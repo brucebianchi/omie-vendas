@@ -46,6 +46,31 @@ def obter_vendas_anselmo(data_inicial, data_final):
         st.error(f"Erro na requisição: {response.status_code}")
         return None
 
+# Função para fazer a requisição à API e coletar os dados de vendas para Favinco
+def obter_vendas_favinco(data_inicial, data_final):
+    url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ObterResumoProdutos",
+        "param": [
+            {
+                "dDataInicio": data_inicial,
+                "dDataFim": data_final,
+                "lApenasResumo": True
+            }
+        ],
+        "app_key": app_key_anselmo,  # Use the same app_key if it's the same for both
+        "app_secret": app_secret_anselmo  # Use the same app_secret if it's the same for both
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        st.error(f"Erro na requisição: {response.status_code}")
+        return None
+
 # Função para obter vendedores únicos a partir dos pedidos de venda
 def obter_vendedores_unicos(data_inicial, data_final):
     url = 'https://app.omie.com.br/api/v1/produtos/pedido/'
