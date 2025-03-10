@@ -1,17 +1,16 @@
 import streamlit as st
 import requests
 import pandas as pd
-import os
 from datetime import datetime, timedelta
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Anselmo
 def obter_vendas_anselmo(data_inicial, data_final):
-    # Imprimir as credenciais para verificar se estão sendo carregadas corretamente
-    app_key = os.getenv('APP_KEY_ANSELMO')
-    app_secret = os.getenv('APP_SECRET_ANSELMO')
-    
-    st.write(f"APP_KEY_ANSELMO: {app_key}")  # Imprime a chave da API
-    st.write(f"APP_SECRET_ANSELMO: {app_secret}")  # Imprime o segredo da API
+    # Acessando as chaves secretas configuradas no Streamlit Secrets
+    app_key = st.secrets["APP_KEY_ANSELMO"]
+    app_secret = st.secrets["APP_SECRET_ANSELMO"]
+
+    st.write(f"APP_KEY_ANSELMO: {app_key}")  # Para depuração, pode remover depois
+    st.write(f"APP_SECRET_ANSELMO: {app_secret}")  # Para depuração, pode remover depois
 
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
@@ -38,12 +37,12 @@ def obter_vendas_anselmo(data_inicial, data_final):
 
 # Função para fazer a requisição à API e coletar os dados de vendas para Favinco
 def obter_vendas_favinco(data_inicial, data_final):
-    # Imprimir as credenciais para verificar se estão sendo carregadas corretamente
-    app_key = os.getenv('APP_KEY_FAVINCO')
-    app_secret = os.getenv('APP_SECRET_FAVINCO')
-    
-    st.write(f"APP_KEY_FAVINCO: {app_key}")  # Imprime a chave da API
-    st.write(f"APP_SECRET_FAVINCO: {app_secret}")  # Imprime o segredo da API
+    # Acessando as chaves secretas configuradas no Streamlit Secrets
+    app_key = st.secrets["APP_KEY_FAVINCO"]
+    app_secret = st.secrets["APP_SECRET_FAVINCO"]
+
+    st.write(f"APP_KEY_FAVINCO: {app_key}")  # Para depuração, pode remover depois
+    st.write(f"APP_SECRET_FAVINCO: {app_secret}")  # Para depuração, pode remover depois
 
     url = 'https://app.omie.com.br/api/v1/produtos/vendas-resumo/'
     headers = {'Content-Type': 'application/json'}
