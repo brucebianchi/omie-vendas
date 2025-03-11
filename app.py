@@ -45,7 +45,6 @@ else:
 
         st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
         st.write(df_vendedores)
-
         
         # Exibir resposta da API se a opção for selecionada
         if mostrar_resposta_api:
