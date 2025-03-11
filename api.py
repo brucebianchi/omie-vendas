@@ -121,3 +121,24 @@ def obter_vendedores_unicos_e_vendas_favinco(data_inicial, data_final, app_key, 
         return vendedores  # Retorna o dicionário de vendedores e suas vendas totais
     else:
         return None
+
+def obter_nome_vendedor(vendedor_codigo, app_key, app_secret):
+    url = 'https://app.omie.com.br/api/v1/geral/vendedores/'
+    headers = {'Content-Type': 'application/json'}
+    body = {
+        "call": "ConsultarVendedor",
+        "param": [{"codigo": vendedor_codigo}],
+        "app_key": app_key,
+        "app_secret": app_secret
+    }
+
+    response = requests.post(url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        dados_vendedor = response.json()
+        if 'nome' in dados_vendedor:
+            return dados_vendedor['nome']
+        else:
+            return None
+    else:
+        return None
