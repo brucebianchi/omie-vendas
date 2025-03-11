@@ -99,12 +99,17 @@ def gerar_relatorio_vendedores(start_date, end_date,
 
         vendedores_info.append({
             'Nome Vendedor': nome,
-            'Vendas Anselmo': f"R$ {vendas['Vendas Anselmo']:,.2f}",
-            'Vendas Favinco': f"R$ {vendas['Vendas Favinco']:,.2f}",
-            'Total de Vendas': f"R$ {total_vendas:,.2f}",
-            'Percentual de Contribuição': f"{percentual:,.2f}%"  # Formatação do percentual
+            'Vendas Anselmo': f"R$ {vendas['Vendas Anselmo']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
+            'Vendas Favinco': f"R$ {vendas['Vendas Favinco']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
+            'Total de Vendas': f"R$ {total_vendas:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
+            'Percentual de Contribuição': f"{percentual:,.2f}%"
         })
 
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
+
+    # Alinhar à direita
+    df_vendedores = df_vendedores.style.set_properties(subset=['Vendas Anselmo', 'Vendas Favinco', 'Total de Vendas', 'Percentual de Contribuição'], 
+                                                       **{'text-align': 'right'})
+
     return df_vendedores
