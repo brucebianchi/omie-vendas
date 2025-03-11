@@ -73,18 +73,22 @@ def gerar_relatorio_vendedores(start_date, end_date,
             else:
                 vendedores_completos[nome_vendedor]['Vendas Favinco'] += total_vendas_favinco
 
+    # Calcular o total de vendas de todos os vendedores
+    total_vendas_geral = sum([vendas['Vendas Anselmo'] + vendas['Vendas Favinco'] for vendas in vendedores_completos.values()])
+
     # Criar a lista de informações para os vendedores
     for nome, vendas in vendedores_completos.items():
+        total_vendas = vendas['Vendas Anselmo'] + vendas['Vendas Favinco']
+        percentual = (total_vendas / total_vendas_geral) * 100 if total_vendas_geral > 0 else 0
+
         vendedores_info.append({
             'Nome Vendedor': nome,
             'Vendas Anselmo': f"R$ {vendas['Vendas Anselmo']:,.2f}",
             'Vendas Favinco': f"R$ {vendas['Vendas Favinco']:,.2f}",
-            'Total de Vendas': f"R$ {(vendas['Vendas Anselmo'] + vendas['Vendas Favinco']):,.2f}"
+            'Total de Vendas': f"R$ {total_vendas:,.2f}",
+            'Percentual de Contribuição': f"{percentual:,.2f}%"  # Formatação do percentual
         })
 
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
-
-
-
