@@ -37,21 +37,31 @@ def gerar_relatorio_vendas(start_date, end_date, obter_vendas_anselmo, obter_ven
     
     return df_vendas
 
-def gerar_relatorio_vendedores(start_date, end_date, obter_vendedores_unicos_e_vendas_anselmo, obter_vendedores_unicos_e_vendas_favinco):
+def gerar_relatorio_vendedores(start_date, end_date, 
+                                obter_vendedores_anselmo, obter_vendedores_favinco,
+                                app_key_anselmo, app_secret_anselmo,
+                                app_key_favinco, app_secret_favinco):
     vendedores_info = []
-    vendedores_unicos_anselmo = obter_vendedores_unicos_e_vendas_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-    vendedores_unicos_favinco = obter_vendedores_unicos_e_vendas_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'))
-    
+
+    # Obter os vendedores únicos e suas vendas totais para Anselmo
+    vendedores_unicos_anselmo = obter_vendedores_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'), app_key_anselmo, app_secret_anselmo)
+
+    # Obter os vendedores únicos e suas vendas totais para Favinco
+    vendedores_unicos_favinco = obter_vendedores_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'), app_key_favinco, app_secret_favinco)
+
+    # Unir os dados dos vendedores e somar as vendas
     for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
-        
+
         vendedores_info.append({
             'Vendedor': vendedor_id,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
         })
-    
+
+    # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
+
