@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import timedelta
 
 def gerar_relatorio_vendas(start_date, end_date, obter_vendas_anselmo, obter_vendas_favinco, app_key_anselmo, app_secret_anselmo, app_key_favinco, app_secret_favinco):
     vendas_data = []
