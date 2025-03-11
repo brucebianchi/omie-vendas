@@ -51,25 +51,40 @@ def gerar_relatorio_vendedores(start_date, end_date,
     vendedores_unicos_favinco = obter_vendedores_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'), app_key_favinco, app_secret_favinco)
 
     # Unir os dados dos vendedores e somar as vendas
-    for vendedor_id in set(vendedores_unicos_anselmo.keys()).union(vendedores_unicos_favinco.keys()):
-        total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
-        total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
+    vendedores_completos = {}
 
-        # Obter o nome do vendedor
-        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
-        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
+    # Processar vendas de Anselmo
+    for vendedor_id in vendedores_unicos_anselmo:
+        nome_vendedor = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
+        if nome_vendedor:
+            total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
+            if nome_vendedor not in vendedores_completos:
+                vendedores_completos[nome_vendedor] = {'Vendas Anselmo': total_vendas_anselmo, 'Vendas Favinco': 0}
+            else:
+                vendedores_completos[nome_vendedor]['Vendas Anselmo'] += total_vendas_anselmo
 
+    # Processar vendas de Favinco
+    for vendedor_id in vendedores_unicos_favinco:
+        nome_vendedor = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
+        if nome_vendedor:
+            total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
+            if nome_vendedor not in vendedores_completos:
+                vendedores_completos[nome_vendedor] = {'Vendas Anselmo': 0, 'Vendas Favinco': total_vendas_favinco}
+            else:
+                vendedores_completos[nome_vendedor]['Vendas Favinco'] += total_vendas_favinco
+
+    # Criar a lista de informações para os vendedores
+    for nome, vendas in vendedores_completos.items():
         vendedores_info.append({
-            'Vendedor': vendedor_id,
-            'Nome Anselmo': nome_vendedor_anselmo,
-            'Nome Favinco': nome_vendedor_favinco,
-            'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
-            'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
-            'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
+            'Nome Vendedor': nome,
+            'Vendas Anselmo': f"R$ {vendas['Vendas Anselmo']:,.2f}",
+            'Vendas Favinco': f"R$ {vendas['Vendas Favinco']:,.2f}",
+            'Total de Vendas': f"R$ {(vendas['Vendas Anselmo'] + vendas['Vendas Favinco']):,.2f}"
         })
 
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
+
 
 
