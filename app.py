@@ -32,11 +32,9 @@ else:
                                    obter_vendas_favinco,
                                    app_key_anselmo, app_secret_anselmo,
                                    app_key_favinco, app_secret_favinco)
-
+        
         st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
         st.write(df_vendas)
-
-                                        **{'text-align': 'right'}))
 
         df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
                                            obter_vendedores_unicos_e_vendas_anselmo,
