@@ -1,39 +1,47 @@
 import pandas as pd
 from datetime import timedelta
 
-def gerar_relatorio_vendas(start_date, end_date, obter_vendas_anselmo, obter_vendas_favinco, app_key_anselmo, app_secret_anselmo, app_key_favinco, app_secret_favinco):
+def gerar_relatorio_vendas(start_date, end_date, 
+                            obter_vendas_anselmo, obter_vendas_favinco,
+                            app_key_anselmo, app_secret_anselmo,
+                            app_key_favinco, app_secret_favinco):
     vendas_data = []
-    total_acumulado = 0  
+    total_acumulado = 0  # Variável para armazenar o valor acumulado
     current_date = start_date
     
     while current_date <= end_date:
-        data_formatada = current_date.strftime('%d/%m/%Y')  
+        data_formatada = current_date.strftime('%d/%m/%Y')  # Formato brasileiro
         
-        # Passar as chaves diretamente para as funções
+        # Obter dados de vendas da Anselmo
         dados_anselmo = obter_vendas_anselmo(data_formatada, data_formatada, app_key_anselmo, app_secret_anselmo)
         vendas_anselmo = dados_anselmo['pedidoVenda']['vFaturadas'] if dados_anselmo and 'pedidoVenda' in dados_anselmo else 0
         
+        # Obter dados de vendas da Favinco
         dados_favinco = obter_vendas_favinco(data_formatada, data_formatada, app_key_favinco, app_secret_favinco)
         vendas_favinco = dados_favinco['pedidoVenda']['vFaturadas'] if dados_favinco and 'pedidoVenda' in dados_favinco else 0
         
+        # Somar as vendas de Anselmo e Favinco
         total_vendas = vendas_anselmo + vendas_favinco
-        total_acumulado += total_vendas
+        total_acumulado += total_vendas  # Atualiza o valor acumulado
         
-        vendas_data.append({
-            'Data': data_formatada,
-            'Vendas Diárias - Anselmo': vendas_anselmo,
-            'Vendas Diárias - Favinco': vendas_favinco,
-            'Vendas Diárias - Total': total_vendas,
-            'Acumulado Vendas': total_acumulado
-        })
+        # Adiciona a linha ao DataFrame apenas se o total de vendas for maior que zero
+        if total_vendas > 0:
+            vendas_data.append({
+                'Data': data_formatada,
+                'Vendas Diárias - Anselmo': f"R$ {vendas_anselmo:,.2f}",
+                'Vendas Diárias - Favinco': f"R$ {vendas_favinco:,.2f}",
+                'Vendas Diárias - Total': f"R$ {total_vendas:,.2f}",
+                'Acumulado Vendas': f"R$ {total_acumulado:,.2f}"
+            })
         
         current_date += timedelta(days=1)
     
+    # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
-    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
-    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
+    
+    # Ajustar o índice para começar de 1
+    df_vendas.reset_index(drop=True, inplace=True)
+    df_vendas.index += 1  # Começar a contagem do índice a partir de 1
     
     return df_vendas
 
