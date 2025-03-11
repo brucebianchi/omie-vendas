@@ -40,7 +40,8 @@ def gerar_relatorio_vendas(start_date, end_date, obter_vendas_anselmo, obter_ven
 def gerar_relatorio_vendedores(start_date, end_date, 
                                 obter_vendedores_anselmo, obter_vendedores_favinco,
                                 app_key_anselmo, app_secret_anselmo,
-                                app_key_favinco, app_secret_favinco):
+                                app_key_favinco, app_secret_favinco,
+                                obter_nome_vendedor):
     vendedores_info = []
 
     # Obter os vendedores únicos e suas vendas totais para Anselmo
@@ -54,8 +55,14 @@ def gerar_relatorio_vendedores(start_date, end_date,
         total_vendas_anselmo = vendedores_unicos_anselmo.get(vendedor_id, 0)
         total_vendas_favinco = vendedores_unicos_favinco.get(vendedor_id, 0)
 
+        # Obter o nome do vendedor
+        nome_vendedor_anselmo = obter_nome_vendedor(vendedor_id, app_key_anselmo, app_secret_anselmo)
+        nome_vendedor_favinco = obter_nome_vendedor(vendedor_id, app_key_favinco, app_secret_favinco)
+
         vendedores_info.append({
             'Vendedor': vendedor_id,
+            'Nome Anselmo': nome_vendedor_anselmo,
+            'Nome Favinco': nome_vendedor_favinco,
             'Vendas Anselmo': f"R$ {total_vendas_anselmo:,.2f}",
             'Vendas Favinco': f"R$ {total_vendas_favinco:,.2f}",
             'Total de Vendas': f"R$ {total_vendas_anselmo + total_vendas_favinco:,.2f}"
@@ -64,4 +71,5 @@ def gerar_relatorio_vendedores(start_date, end_date,
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
     return df_vendedores
+
 
