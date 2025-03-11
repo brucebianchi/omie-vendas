@@ -47,7 +47,6 @@ if verificar_login(usuario, senha):
         st.error("A data de início não pode ser maior que a data de fim.")
     else:
         if st.button('Gerar Relatório'):
-            # Gerar o relatório de vendas
             df_vendas = gerar_relatorio_vendas(start_date, end_date, 
                                                obter_vendas_anselmo, 
                                                obter_vendas_favinco,
@@ -57,24 +56,15 @@ if verificar_login(usuario, senha):
             st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
             st.write(df_vendas)
 
-            # Verificar se há vendas para gerar o relatório de vendedores
-            # Convertendo os valores de vendas para float e somando o total
-            total_vendas = df_vendas['Vendas Diárias - Total'].apply(lambda x: float(x.replace('R$ ', '').replace('.', '').replace(',', '.'))).sum()
+            df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
+                                                   obter_vendedores_unicos_e_vendas_anselmo,
+                                                   obter_vendedores_unicos_e_vendas_favinco,
+                                                   app_key_anselmo, app_secret_anselmo,
+                                                   app_key_favinco, app_secret_favinco,
+                                                   obter_nome_vendedor)
 
-            # Só gerar o relatório de vendedores se o total de vendas for maior que zero
-            if total_vendas > 0:
-                # Gerar o relatório de vendedores
-                df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
-                                                           obter_vendedores_unicos_e_vendas_anselmo,
-                                                           obter_vendedores_unicos_e_vendas_favinco,
-                                                           app_key_anselmo, app_secret_anselmo,
-                                                           app_key_favinco, app_secret_favinco,
-                                                           obter_nome_vendedor)
-
-                st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
-                st.write(df_vendedores)
-            else:
-                st.warning("Não há vendas para gerar o relatório de vendedores.")
+            st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
+            st.write(df_vendedores)
             
             # Exibir resposta da API se a opção for selecionada
             if mostrar_resposta_api:
