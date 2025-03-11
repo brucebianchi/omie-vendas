@@ -26,10 +26,10 @@ def gerar_relatorio_vendas(start_date, end_date,
         
         vendas_data.append({
             'Data': data_formatada,
-            'Vendas Diárias - Anselmo': f"R$ {vendas_anselmo:,.2f}",
-            'Vendas Diárias - Favinco': f"R$ {vendas_favinco:,.2f}",
-            'Vendas Diárias - Total': f"R$ {total_vendas:,.2f}",
-            'Acumulado Vendas': f"R$ {total_acumulado:,.2f}"
+            'Vendas Diárias - Anselmo': vendas_anselmo,
+            'Vendas Diárias - Favinco': vendas_favinco,
+            'Vendas Diárias - Total': total_vendas,
+            'Acumulado Vendas': total_acumulado
         })
         
         current_date += timedelta(days=1)
@@ -37,8 +37,11 @@ def gerar_relatorio_vendas(start_date, end_date,
     # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
     
-    # Filtrar os dias com total de vendas zero
-    df_vendas = df_vendas[df_vendas['Vendas Diárias - Total'] != 'R$ 0,00']
+    # Alinhar as colunas de valores à direita
+    df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Vendas Diárias - Total'] = df_vendas['Vendas Diárias - Total'].apply(lambda x: f"R$ {x:,.2f}")
+    df_vendas['Acumulado Vendas'] = df_vendas['Acumulado Vendas'].apply(lambda x: f"R$ {x:,.2f}")
     
     # Ajustar o índice para começar de 1
     df_vendas.reset_index(drop=True, inplace=True)
