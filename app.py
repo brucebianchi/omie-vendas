@@ -28,14 +28,14 @@ if start_date > end_date:
 else:
     if st.button('Gerar Relatório'):
         df_vendas = gerar_relatorio_vendas(start_date, end_date, 
-                                           obter_vendas_anselmo, 
-                                           obter_vendas_favinco,
-                                           app_key_anselmo, app_secret_anselmo,
-                                           app_key_favinco, app_secret_favinco)
-        
+                                   obter_vendas_anselmo, 
+                                   obter_vendas_favinco,
+                                   app_key_anselmo, app_secret_anselmo,
+                                   app_key_favinco, app_secret_favinco)
+
         st.markdown("<h3 style='color:orange;'>Relatório de Vendas Diárias</h3>", unsafe_allow_html=True)
         st.write(df_vendas)
-        
+
         df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
                                            obter_vendedores_unicos_e_vendas_anselmo,
                                            obter_vendedores_unicos_e_vendas_favinco,
@@ -43,9 +43,9 @@ else:
                                            app_key_favinco, app_secret_favinco,
                                            obter_nome_vendedor)
 
-        
         st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
         st.write(df_vendedores)
+
         
         # Exibir resposta da API se a opção for selecionada
         if mostrar_resposta_api:
