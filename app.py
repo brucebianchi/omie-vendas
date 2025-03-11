@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import datetime
-from api import obter_vendas_anselmo, obter_vendas_favinco
+from api import obter_vendas_anselmo, obter_vendas_favinco, obter_vendedores_unicos_e_vendas_anselmo, obter_vendedores_unicos_e_vendas_favinco
 from relatorio import gerar_relatorio_vendas, gerar_relatorio_vendedores
 from utils import decode_base64
 
