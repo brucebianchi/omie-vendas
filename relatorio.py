@@ -24,20 +24,21 @@ def gerar_relatorio_vendas(start_date, end_date,
         total_vendas = vendas_anselmo + vendas_favinco
         total_acumulado += total_vendas  # Atualiza o valor acumulado
         
-        # Adiciona a linha ao DataFrame apenas se o total de vendas for maior que zero
-        if total_vendas > 0:
-            vendas_data.append({
-                'Data': data_formatada,
-                'Vendas Diárias - Anselmo': f"R$ {vendas_anselmo:,.2f}",
-                'Vendas Diárias - Favinco': f"R$ {vendas_favinco:,.2f}",
-                'Vendas Diárias - Total': f"R$ {total_vendas:,.2f}",
-                'Acumulado Vendas': f"R$ {total_acumulado:,.2f}"
-            })
+        vendas_data.append({
+            'Data': data_formatada,
+            'Vendas Diárias - Anselmo': f"R$ {vendas_anselmo:,.2f}",
+            'Vendas Diárias - Favinco': f"R$ {vendas_favinco:,.2f}",
+            'Vendas Diárias - Total': f"R$ {total_vendas:,.2f}",
+            'Acumulado Vendas': f"R$ {total_acumulado:,.2f}"
+        })
         
         current_date += timedelta(days=1)
     
     # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
+    
+    # Filtrar os dias com total de vendas zero
+    df_vendas = df_vendas[df_vendas['Vendas Diárias - Total'] != 'R$ 0,00']
     
     # Ajustar o índice para começar de 1
     df_vendas.reset_index(drop=True, inplace=True)
