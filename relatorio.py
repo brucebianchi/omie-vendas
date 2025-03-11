@@ -102,7 +102,7 @@ def gerar_relatorio_vendedores(start_date, end_date,
             'Vendas Anselmo': f"R$ {vendas['Vendas Anselmo']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
             'Vendas Favinco': f"R$ {vendas['Vendas Favinco']:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
             'Total de Vendas': f"R$ {total_vendas:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'),
-            'Percentual de Contribuição': f"{percentual:,.2f}%"
+            'Percentual de Contribuição': f"{percentual:,.2f}%".replace(',', 'X').replace('.', ',').replace('X', '.')
         })
 
     # Criar DataFrame com os dados dos vendedores
