@@ -35,10 +35,10 @@ else:
         st.write(df_vendas)
         
         df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
-                                                   obter_vendedores_unicos_e_vendas_anselmo,
-                                                   obter_vendedores_unicos_e_vendas_favinco,
-                                                   app_key_anselmo, app_secret_anselmo,
-                                                   app_key_favinco, app_secret_favinco)
+                                           obter_vendedores_unicos_e_vendas_anselmo,
+                                           obter_vendedores_unicos_e_vendas_favinco,
+                                           app_key_anselmo, app_secret_anselmo,
+                                           app_key_favinco, app_secret_favinco)
         
         st.markdown("<h3 style='color:green;'>Total de Vendas por Vendedor</h3>", unsafe_allow_html=True)
         st.write(df_vendedores)
