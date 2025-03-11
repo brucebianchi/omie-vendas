@@ -1,3 +1,4 @@
+import streamlit as st
 from datetime import datetime
 from api_requests import obter_vendas_anselmo, obter_vendas_favinco
 from utils import decode_base64
