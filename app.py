@@ -1,3 +1,4 @@
+import streamlit as st
 from datetime import datetime
 from api import obter_vendas_anselmo, obter_vendas_favinco
 from relatorio import gerar_relatorio_vendas, gerar_relatorio_vendedores
