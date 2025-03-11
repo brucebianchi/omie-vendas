@@ -37,6 +37,10 @@ def gerar_relatorio_vendas(start_date, end_date,
     # Criar um DataFrame com os dados coletados
     df_vendas = pd.DataFrame(vendas_data)
     
+    # Verificar se o DataFrame está vazio
+    if df_vendas.empty:
+        return pd.DataFrame(columns=["Data", "Vendas Diárias - Anselmo", "Vendas Diárias - Favinco", "Vendas Diárias - Total", "Acumulado Vendas"])
+
     # Formatar as colunas de valores para o padrão brasileiro (R$)
     df_vendas['Vendas Diárias - Anselmo'] = df_vendas['Vendas Diárias - Anselmo'].apply(lambda x: f"R$ {x:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
     df_vendas['Vendas Diárias - Favinco'] = df_vendas['Vendas Diárias - Favinco'].apply(lambda x: f"R$ {x:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
@@ -62,11 +66,14 @@ def gerar_relatorio_vendedores(start_date, end_date,
 
     # Obter os vendedores únicos e suas vendas totais para Anselmo
     vendedores_unicos_anselmo = obter_vendedores_anselmo(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'), app_key_anselmo, app_secret_anselmo)
+    if not vendedores_unicos_anselmo:
+        vendedores_unicos_anselmo = {}
 
     # Obter os vendedores únicos e suas vendas totais para Favinco
     vendedores_unicos_favinco = obter_vendedores_favinco(start_date.strftime('%d/%m/%Y'), end_date.strftime('%d/%m/%Y'), app_key_favinco, app_secret_favinco)
+    if not vendedores_unicos_favinco:
+        vendedores_unicos_favinco = {}
 
-    # Unir os dados dos vendedores e somar as vendas
     vendedores_completos = {}
 
     # Processar vendas de Anselmo
@@ -107,6 +114,10 @@ def gerar_relatorio_vendedores(start_date, end_date,
 
     # Criar DataFrame com os dados dos vendedores
     df_vendedores = pd.DataFrame(vendedores_info)
+
+    # Verificar se o DataFrame está vazio
+    if df_vendedores.empty:
+        return pd.DataFrame(columns=["Nome Vendedor", "Vendas Anselmo", "Vendas Favinco", "Total de Vendas", "Percentual de Contribuição"])
 
     # Alinhar à direita
     df_vendedores = df_vendedores.style.set_properties(subset=['Vendas Anselmo', 'Vendas Favinco', 'Total de Vendas', 'Percentual de Contribuição'], 
