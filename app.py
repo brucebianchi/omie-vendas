@@ -58,8 +58,10 @@ if verificar_login(usuario, senha):
             st.write(df_vendas)
 
             # Verificar se há vendas para gerar o relatório de vendedores
+            # Convertendo os valores de vendas para float e somando o total
             total_vendas = df_vendas['Vendas Diárias - Total'].apply(lambda x: float(x.replace('R$ ', '').replace('.', '').replace(',', '.'))).sum()
 
+            # Só gerar o relatório de vendedores se o total de vendas for maior que zero
             if total_vendas > 0:
                 # Gerar o relatório de vendedores
                 df_vendedores = gerar_relatorio_vendedores(start_date, end_date, 
